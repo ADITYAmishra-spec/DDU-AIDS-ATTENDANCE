@@ -1,6 +1,6 @@
 name: Deploy DDU AIDS Attendance Portal
 
-on:
+'on':
 push:
 branches:
 - main
