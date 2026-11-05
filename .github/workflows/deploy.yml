@@ -31,6 +31,20 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        - name: Check Supabase Secrets
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "SUPABASE URL MISSING"
+            exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "SUPABASE KEY MISSING"
+            exit 1
+          fi
+          echo "Both Supabase secrets are available"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Build project
         run: npm run build
