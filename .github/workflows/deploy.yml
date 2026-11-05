@@ -24,7 +24,26 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
+      - name: Check Supabase Variables
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "SUPABASE_URL_EMPTY"
+            exit 1
+          fi
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "SUPABASE_KEY_EMPTY"
+            exit 1
+          fi
+          echo "SUPABASE_URL_PRESENT"
+          echo "SUPABASE_KEY_PRESENT"
+          echo "URL_LENGTH=${#VITE_SUPABASE_URL}"
+          echo "KEY_LENGTH=${#VITE_SUPABASE_ANON_KEY}"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Build
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
