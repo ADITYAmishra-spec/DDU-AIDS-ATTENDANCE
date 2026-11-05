@@ -22,6 +22,9 @@ const menuItems = [
   { id: "settings", label: "Settings" },
 ];
 
+const EMAIL_REDIRECT_URL =
+  "https://adityamishra-spec.github.io/DDU-AIDS-ATTENDANCE/";
+
 function formatTime(value) {
   if (!value) return "—";
 
@@ -345,6 +348,7 @@ function App() {
           email: loginEmail.trim(),
           password: loginPassword,
           options: {
+            emailRedirectTo: EMAIL_REDIRECT_URL,
             data: {
               full_name: signupName.trim(),
               phone: signupPhone.trim(),
@@ -576,7 +580,6 @@ function App() {
     try {
       const today = getIndiaDate();
 
-      // Prevent duplicate subject session for the same date.
       const { data: existing, error: checkError } = await supabase
         .from("attendance_sessions")
         .select("id, subject, session_date, is_open")
