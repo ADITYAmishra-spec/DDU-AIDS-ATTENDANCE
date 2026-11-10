@@ -11,6 +11,15 @@ const days = {
   6: "Saturday",
 };
 
+const teacherMenuIds = [
+  "dashboard",
+  "timetable",
+  "students",
+  "reports",
+  "analytics",
+  "settings",
+];
+
 const menuItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "my-attendance", label: "My Attendance" },
@@ -101,6 +110,8 @@ function App() {
   const role = profile?.role || "student";
   const isStaff = role === "admin" || role === "cr";
   const isAdmin = role === "admin";
+  const isTeacher = role === "teacher";
+  const canViewData = isStaff || isTeacher;
 
   const present = attendanceRecords.filter(
     (item) => item.status === "present"
@@ -276,7 +287,7 @@ function App() {
           loadSessions(),
         ];
 
-        if (isStaff) {
+        if (canViewData) {
           tasks.push(loadStudents());
           tasks.push(loadAllRecords());
         }
@@ -307,6 +318,7 @@ function App() {
     profile?.id,
     profile?.student_id,
     isStaff,
+    isTeacher,
     selectedSession,
   ]);
 
@@ -390,6 +402,20 @@ function App() {
     setError("");
   }
 
+  // TEACHER: SUBJECTS ASSIGNED TO ME
+  async function getMyTeacherSubjects() {
+    const { data, error } = await supabase
+      .from("teacher_subjects")
+      .select("subject_code");
+
+    if (error) {
+      setError("Teacher subjects: " + error.message);
+      return [];
+    }
+
+    return (data || []).map((r) => r.subject_code);
+  }
+
   // LOAD STUDENTS
   async function loadStudents() {
     const { data, error } = await supabase
@@ -420,7 +446,14 @@ function App() {
       return;
     }
 
-    setTimetable(data || []);
+    let rows = data || [];
+
+    if (isTeacher) {
+      const mine = await getMyTeacherSubjects();
+      rows = rows.filter((r) => mine.includes(r.subject_code));
+    }
+
+    setTimetable(rows);
   }
 
   // LOAD SESSIONS
@@ -436,7 +469,14 @@ function App() {
       return;
     }
 
-    const loadedSessions = data || [];
+    let loadedSessions = data || [];
+
+    if (isTeacher) {
+      const mine = await getMyTeacherSubjects();
+      loadedSessions = loadedSessions.filter((s) =>
+        mine.includes(s.subject)
+      );
+    }
 
     setSessions(loadedSessions);
 
@@ -970,7 +1010,11 @@ function App() {
 
         <nav>
           {menuItems
-            .filter((item) => !item.staff || isStaff)
+            .filter((item) =>
+              isTeacher
+                ? teacherMenuIds.includes(item.id)
+                : !item.staff || isStaff
+            )
             .map((item) => (
               <button
                 key={item.id}
@@ -1025,7 +1069,7 @@ function App() {
               </p>
             </div>
 
-            {isStaff ? (
+            {canViewData ? (
               <>
                 <div className="stats-grid">
                   <Stat
@@ -1059,11 +1103,13 @@ function App() {
                   <h3>Quick Links</h3>
 
                   <div className="quick-links">
-                    <button
-                      onClick={() => setActive("attendance")}
-                    >
-                      Manage Attendance
-                    </button>
+                    {isStaff && (
+                      <button
+                        onClick={() => setActive("attendance")}
+                      >
+                        Manage Attendance
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setActive("analytics")}
@@ -1537,8 +1583,9 @@ function App() {
         )}
 
         {/* STUDENTS */}
-        {active === "students" && isStaff && (
+        {active === "students" && canViewData && (
           <section className="page-content">
+            {isStaff && (
             <div className="panel">
               <h3>Add New Student</h3>
 
@@ -1571,6 +1618,7 @@ function App() {
                 </button>
               </form>
             </div>
+            )}
 
             {isAdmin && (
               <div className="panel">
@@ -1631,16 +1679,28 @@ function App() {
                     <tr>
                       <th>Name</th>
                       <th>Mobile Number</th>
+                      <th>Present</th>
+                      <th>Closed Sessions</th>
+                      <th>Percentage</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {filteredStudents.map((s) => (
-                      <tr key={s.id}>
-                        <td>{s.name}</td>
-                        <td>{s.mobile_number}</td>
-                      </tr>
-                    ))}
+                    {filteredStudents.map((s) => {
+                      const a = studentAnalytics.find(
+                        (x) => x.id === s.id
+                      );
+
+                      return (
+                        <tr key={s.id}>
+                          <td>{s.name}</td>
+                          <td>{s.mobile_number}</td>
+                          <td>{a ? a.attended : 0}</td>
+                          <td>{a ? a.total : 0}</td>
+                          <td>{a ? `${a.percentage}%` : "0%"}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1649,7 +1709,7 @@ function App() {
         )}
 
         {/* REPORTS */}
-        {active === "reports" && isStaff && (
+        {active === "reports" && canViewData && (
           <section className="page-content">
             <div className="panel">
               <h3>Attendance Reports</h3>
@@ -1690,7 +1750,7 @@ function App() {
         )}
 
         {/* ANALYTICS */}
-        {active === "analytics" && isStaff && (
+        {active === "analytics" && canViewData && (
           <section className="page-content">
             <div className="panel">
               <h3>Class Attendance Analytics</h3>
