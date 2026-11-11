@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
 import "./style.css";
@@ -10,6 +11,15 @@ const days = {
   5: "Friday",
   6: "Saturday",
 };
+
+const teacherMenuIds = [
+  "dashboard",
+  "timetable",
+  "students",
+  "reports",
+  "analytics",
+  "settings",
+];
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard" },
@@ -78,6 +88,17 @@ function App() {
   const [allRecords, setAllRecords] = useState([]);
   const [myAttendance, setMyAttendance] = useState([]);
 
+  // TEACHER PORTAL DATA
+  const [teacherSubjects, setTeacherSubjects] = useState([]);
+  const [teacherReports, setTeacherReports] = useState({});
+  const [teacherSubjectSelected, setTeacherSubjectSelected] =
+    useState("");
+
+  // ADMIN TEACHER LINKING
+  const [teachers, setTeachers] = useState([]);
+  const [linkTeacherEmail, setLinkTeacherEmail] = useState("");
+  const [linkTeacherId, setLinkTeacherId] = useState("");
+
   const [selectedSession, setSelectedSession] = useState("");
   const [search, setSearch] = useState("");
 
@@ -85,6 +106,7 @@ function App() {
   const [loginPassword, setLoginPassword] = useState("");
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
+  const [signupType, setSignupType] = useState("student");
   const [isSignup, setIsSignup] = useState(false);
 
   const [newStudentName, setNewStudentName] = useState("");
@@ -101,6 +123,8 @@ function App() {
   const role = profile?.role || "student";
   const isStaff = role === "admin" || role === "cr";
   const isAdmin = role === "admin";
+  const isTeacher = role === "teacher";
+  const canViewData = isStaff || isTeacher;
 
   const present = attendanceRecords.filter(
     (item) => item.status === "present"
@@ -112,15 +136,18 @@ function App() {
 
   const notMarked = Math.max(0, students.length - present - absent);
 
+  const selectedTeacherReport =
+    teacherReports[teacherSubjectSelected] || [];
+
   const filteredStudents = useMemo(() => {
     const q = search.toLowerCase();
 
     return students.filter(
       (s) =>
         s.name?.toLowerCase().includes(q) ||
-        s.mobile_number?.includes(q)
+        (!isTeacher && s.mobile_number?.includes(q))
     );
-  }, [students, search]);
+  }, [students, search, isTeacher]);
 
   const closedSessions = useMemo(
     () => sessions.filter((s) => !s.is_open),
@@ -135,7 +162,75 @@ function App() {
     );
   }, [sessions]);
 
+  const studentAnalytics = useMemo(() => {
+    if (isTeacher) {
+      return selectedTeacherReport.map((r) => {
+        const total = Number(r.total_sessions || 0);
+        const attended = Number(r.present_sessions || 0);
+
+        return {
+          id: r.student_id,
+          name: r.student_name,
+          total,
+          attended,
+          missed: Math.max(0, total - attended),
+          percentage: Number(r.attendance_percentage || 0),
+        };
+      });
+    }
+
+    return students.map((student) => {
+      const total = closedSessions.length;
+
+      const studentRecords = allRecords.filter(
+        (r) =>
+          r.student_id === student.id &&
+          r.attendance_sessions &&
+          !r.attendance_sessions.is_open
+      );
+
+      const attended = studentRecords.filter(
+        (r) => r.status === "present"
+      ).length;
+
+      return {
+        ...student,
+        total,
+        attended,
+        missed: Math.max(0, total - attended),
+        percentage: percentage(attended, total),
+      };
+    });
+  }, [
+    isTeacher,
+    selectedTeacherReport,
+    students,
+    closedSessions,
+    allRecords,
+  ]);
+
   const subjectAnalytics = useMemo(() => {
+    if (isTeacher) {
+      return Object.entries(teacherReports).map(([subject, rows]) => {
+        const totalSessions = Number(rows[0]?.total_sessions || 0);
+
+        const presentCount = rows.reduce(
+          (sum, r) => sum + Number(r.present_sessions || 0),
+          0
+        );
+
+        const possibleCount = totalSessions * rows.length;
+
+        return {
+          subject,
+          total: totalSessions,
+          present: presentCount,
+          possible: possibleCount,
+          percentage: percentage(presentCount, possibleCount),
+        };
+      });
+    }
+
     const result = {};
 
     closedSessions.forEach((s) => {
@@ -160,40 +255,23 @@ function App() {
       }
     });
 
-    return Object.entries(result).map(([subject, values]) => ({
-      subject,
-      ...values,
-      percentage: percentage(
-        values.present,
-        values.total * students.length
-      ),
-    }));
-  }, [closedSessions, allRecords, students.length]);
-
-  const studentAnalytics = useMemo(() => {
-    return students.map((student) => {
-      const total = closedSessions.length;
-
-      const studentRecords = allRecords.filter(
-        (r) =>
-          r.student_id === student.id &&
-          r.attendance_sessions &&
-          !r.attendance_sessions.is_open
-      );
-
-      const attended = studentRecords.filter(
-        (r) => r.status === "present"
-      ).length;
+    return Object.entries(result).map(([subject, values]) => {
+      const possible = values.total * students.length;
 
       return {
-        ...student,
-        total,
-        attended,
-        missed: Math.max(0, total - attended),
-        percentage: percentage(attended, total),
+        subject,
+        ...values,
+        possible,
+        percentage: percentage(values.present, possible),
       };
     });
-  }, [students, closedSessions, allRecords]);
+  }, [
+    isTeacher,
+    teacherReports,
+    closedSessions,
+    allRecords,
+    students.length,
+  ]);
 
   const myClosedRecords = myAttendance.filter(
     (r) => r.attendance_sessions && !r.attendance_sessions.is_open
@@ -244,6 +322,10 @@ function App() {
         setAttendanceRecords([]);
         setAllRecords([]);
         setMyAttendance([]);
+        setTeacherSubjects([]);
+        setTeacherReports({});
+        setTeacherSubjectSelected("");
+        setTeachers([]);
         setSelectedSession("");
         setActive("dashboard");
       } else {
@@ -281,11 +363,19 @@ function App() {
           tasks.push(loadAllRecords());
         }
 
-        if (profile.student_id) {
+        if (isTeacher) {
+          tasks.push(loadTeacherReports());
+        }
+
+        if (isAdmin) {
+          tasks.push(loadTeachers());
+        }
+
+        if (profile.student_id && !isTeacher) {
           tasks.push(loadMyAttendance());
         }
 
-        if (selectedSession) {
+        if (selectedSession && isStaff) {
           tasks.push(loadAttendanceRecords(selectedSession));
         }
 
@@ -299,30 +389,29 @@ function App() {
 
     const refreshTimer = setInterval(refreshData, 15000);
 
-    return () => {
-      clearInterval(refreshTimer);
-    };
+    return () => clearInterval(refreshTimer);
   }, [
     session?.user?.id,
     profile?.id,
     profile?.student_id,
-    isStaff,
+    profile?.role,
     selectedSession,
   ]);
 
   // LOAD ATTENDANCE WHEN SESSION CHANGES
   useEffect(() => {
-    if (selectedSession) {
+    if (selectedSession && isStaff) {
       loadAttendanceRecords(selectedSession);
     } else {
       setAttendanceRecords([]);
     }
-  }, [selectedSession]);
+  }, [selectedSession, isStaff]);
 
+  // PROFILE
   async function loadProfile(userId) {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, role, student_id")
+      .select("id, role, student_id, teacher_id")
       .eq("id", userId)
       .maybeSingle();
 
@@ -352,6 +441,7 @@ function App() {
             data: {
               full_name: signupName.trim(),
               phone: signupPhone.trim(),
+              account_type: signupType,
             },
           },
         });
@@ -360,8 +450,10 @@ function App() {
 
         setMessage(
           data.session
-            ? "Registration successful!"
-            : "Registration successful. Please confirm your email if required."
+            ? signupType === "teacher"
+              ? "Teacher registration successful. Admin must link your account before Teacher access is activated."
+              : "Registration successful!"
+            : "Registration successful. Please confirm your email if required. Admin linking is required for Teacher access."
         );
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -390,8 +482,81 @@ function App() {
     setError("");
   }
 
+  // TEACHER SUBJECTS
+  async function getMyTeacherSubjects() {
+    if (!profile?.id) return [];
+
+    const { data, error } = await supabase
+      .from("teacher_subjects")
+      .select("subject_code")
+      .eq("teacher_id", profile.id);
+
+    if (error) {
+      setError("Teacher subjects: " + error.message);
+      return [];
+    }
+
+    return [...new Set((data || []).map((r) => r.subject_code))];
+  }
+
+  // TEACHER REPORTS - RPC ONLY
+  async function loadTeacherReports() {
+    if (!isTeacher || !profile?.id) return;
+
+    try {
+      const subjects = await getMyTeacherSubjects();
+
+      setTeacherSubjects(subjects);
+
+      const entries = await Promise.all(
+        subjects.map(async (subject) => {
+          const { data, error } = await supabase.rpc(
+            "teacher_subject_attendance",
+            {
+              p_subject_code: subject,
+            }
+          );
+
+          if (error) {
+            throw new Error(`${subject}: ${error.message}`);
+          }
+
+          return [subject, data || []];
+        })
+      );
+
+      const reports = Object.fromEntries(entries);
+
+      setTeacherReports(reports);
+
+      const selected =
+        teacherSubjectSelected &&
+        subjects.includes(teacherSubjectSelected)
+          ? teacherSubjectSelected
+          : subjects[0] || "";
+
+      setTeacherSubjectSelected(selected);
+
+      const rows = reports[selected] || [];
+
+      setStudents(
+        rows.map((r) => ({
+          id: r.student_id,
+          name: r.student_name,
+        }))
+      );
+    } catch (err) {
+      setError("Teacher reports: " + err.message);
+    }
+  }
+
   // LOAD STUDENTS
   async function loadStudents() {
+    if (isTeacher) {
+      await loadTeacherReports();
+      return;
+    }
+
     const { data, error } = await supabase
       .from("students")
       .select("id, name, mobile_number, created_at")
@@ -403,6 +568,23 @@ function App() {
     }
 
     setStudents(data || []);
+  }
+
+  // LOAD ADMIN TEACHER ROSTER
+  async function loadTeachers() {
+    if (!isAdmin) return;
+
+    const { data, error } = await supabase
+      .from("teachers")
+      .select("id, name, mobile_number, subject_codes")
+      .order("name");
+
+    if (error) {
+      setError("Teacher roster: " + error.message);
+      return;
+    }
+
+    setTeachers(data || []);
   }
 
   // LOAD TIMETABLE
@@ -420,7 +602,14 @@ function App() {
       return;
     }
 
-    setTimetable(data || []);
+    let rows = data || [];
+
+    if (isTeacher) {
+      const mine = await getMyTeacherSubjects();
+      rows = rows.filter((r) => mine.includes(r.subject_code));
+    }
+
+    setTimetable(rows);
   }
 
   // LOAD SESSIONS
@@ -436,7 +625,14 @@ function App() {
       return;
     }
 
-    const loadedSessions = data || [];
+    let loadedSessions = data || [];
+
+    if (isTeacher) {
+      const mine = await getMyTeacherSubjects();
+      loadedSessions = loadedSessions.filter((s) =>
+        mine.includes(s.subject)
+      );
+    }
 
     setSessions(loadedSessions);
 
@@ -453,8 +649,10 @@ function App() {
     });
   }
 
-  // LOAD SELECTED SESSION RECORDS
+  // LOAD SELECTED SESSION RECORDS - STAFF ONLY
   async function loadAttendanceRecords(sessionId) {
+    if (!isStaff) return;
+
     const { data, error } = await supabase
       .from("attendance")
       .select("id, student_id, status, marked_at")
@@ -468,8 +666,10 @@ function App() {
     setAttendanceRecords(data || []);
   }
 
-  // LOAD ALL RECORDS FOR ANALYTICS
+  // LOAD ALL RECORDS - STAFF ONLY
   async function loadAllRecords() {
+    if (!isStaff) return;
+
     const { data, error } = await supabase
       .from("attendance")
       .select(
@@ -486,7 +686,7 @@ function App() {
 
   // LOAD PERSONAL ATTENDANCE
   async function loadMyAttendance() {
-    if (!profile?.student_id) return;
+    if (!profile?.student_id || isTeacher) return;
 
     const { data, error } = await supabase
       .from("attendance")
@@ -507,6 +707,8 @@ function App() {
   // ADD STUDENT
   async function addStudent(event) {
     event.preventDefault();
+
+    if (!isStaff) return;
 
     setBusy(true);
     setError("");
@@ -535,6 +737,8 @@ function App() {
   async function linkStudent(event) {
     event.preventDefault();
 
+    if (!isAdmin) return;
+
     setBusy(true);
     setError("");
     setMessage("");
@@ -556,15 +760,67 @@ function App() {
         setError(result.message || "Account linking failed.");
       } else {
         setMessage(result?.message || "Student account linked!");
+        setLinkEmail("");
+        setLinkStudentId("");
       }
     }
 
     setBusy(false);
   }
 
+  // ADMIN LINK TEACHER ACCOUNT
+  async function linkTeacherAccount(event) {
+    event.preventDefault();
+
+    if (!isAdmin) return;
+
+    if (!linkTeacherId || !linkTeacherEmail.trim()) {
+      setError("Please select a teacher and enter signup email.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "admin_link_teacher_by_email",
+        {
+          p_email: linkTeacherEmail.trim(),
+          p_teacher_id: linkTeacherId,
+        }
+      );
+
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+
+      if (result?.success === false) {
+        throw new Error(
+          result.message || "Teacher account linking failed."
+        );
+      }
+
+      setMessage(
+        result?.message ||
+          "Teacher account linked successfully. Teacher can now log in."
+      );
+
+      setLinkTeacherEmail("");
+      setLinkTeacherId("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // CREATE MANUAL ATTENDANCE SESSION
   async function createAttendanceSession(event) {
     event.preventDefault();
+
+    if (!isStaff) return;
 
     const subject = newSubject.trim().toUpperCase();
 
@@ -630,7 +886,7 @@ function App() {
 
   // CLOSE SESSION AND MARK REMAINING STUDENTS ABSENT
   async function closeSession() {
-    if (!selectedSession) return;
+    if (!isStaff || !selectedSession) return;
 
     const selected = sessions.find(
       (s) => s.id === selectedSession
@@ -691,6 +947,8 @@ function App() {
 
   // UPDATE ATTENDANCE MANUALLY
   async function updateAttendance(studentId, status) {
+    if (!isStaff) return;
+
     if (!selectedSession) {
       setError("Please select an attendance session.");
       return;
@@ -750,6 +1008,8 @@ function App() {
 
   // STUDENT GPS ATTENDANCE
   async function markMyAttendance() {
+    if (isTeacher) return;
+
     setBusy(true);
     setError("");
     setMessage("");
@@ -825,24 +1085,40 @@ function App() {
 
   // EXPORT ANALYTICS CSV
   function exportCSV() {
-    const rows = [
-      [
-        "Student Name",
-        "Mobile",
-        "Closed Sessions",
-        "Present",
-        "Absent",
-        "Attendance %",
-      ],
-      ...studentAnalytics.map((s) => [
-        s.name,
-        s.mobile_number,
-        s.total,
-        s.attended,
-        s.missed,
-        `${s.percentage}%`,
-      ]),
-    ];
+    let rows;
+
+    if (isTeacher) {
+      rows = [
+        ["Student Name", "Subject", "Closed Sessions", "Present", "Absent", "Attendance %"],
+        ...studentAnalytics.map((s) => [
+          s.name,
+          teacherSubjectSelected,
+          s.total,
+          s.attended,
+          s.missed,
+          `${s.percentage}%`,
+        ]),
+      ];
+    } else {
+      rows = [
+        [
+          "Student Name",
+          "Mobile",
+          "Closed Sessions",
+          "Present",
+          "Absent",
+          "Attendance %",
+        ],
+        ...studentAnalytics.map((s) => [
+          s.name,
+          s.mobile_number,
+          s.total,
+          s.attended,
+          s.missed,
+          `${s.percentage}%`,
+        ]),
+      ];
+    }
 
     const csv = rows
       .map((row) =>
@@ -860,10 +1136,29 @@ function App() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "DDU-AIDS-Attendance-Analytics.csv";
+    link.download = isTeacher
+      ? `DDU-${teacherSubjectSelected}-Attendance.csv`
+      : "DDU-AIDS-Attendance-Analytics.csv";
+
     link.click();
 
     URL.revokeObjectURL(url);
+  }
+
+  // TEACHER SUBJECT SELECTOR
+  function changeTeacherSubject(subject) {
+    setTeacherSubjectSelected(subject);
+
+    const rows = teacherReports[subject] || [];
+
+    setStudents(
+      rows.map((r) => ({
+        id: r.student_id,
+        name: r.student_name,
+      }))
+    );
+
+    setSearch("");
   }
 
   // LOADING SCREEN
@@ -886,6 +1181,16 @@ function App() {
           <form onSubmit={handleAuth}>
             {isSignup && (
               <>
+                <label>Account Type</label>
+
+                <select
+                  value={signupType}
+                  onChange={(e) => setSignupType(e.target.value)}
+                >
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                </select>
+
                 <label>Full Name</label>
                 <input
                   value={signupName}
@@ -896,6 +1201,7 @@ function App() {
 
                 <label>Mobile Number</label>
                 <input
+                  type="tel"
                   value={signupPhone}
                   onChange={(e) => setSignupPhone(e.target.value)}
                   placeholder="Enter registered mobile number"
@@ -934,7 +1240,7 @@ function App() {
           <p>
             {isSignup
               ? "Already have an account?"
-              : "New student?"}{" "}
+              : "New student or teacher?"}{" "}
             <button
               className="text-btn"
               onClick={() => {
@@ -970,7 +1276,11 @@ function App() {
 
         <nav>
           {menuItems
-            .filter((item) => !item.staff || isStaff)
+            .filter((item) =>
+              isTeacher
+                ? teacherMenuIds.includes(item.id)
+                : !item.staff || isStaff
+            )
             .map((item) => (
               <button
                 key={item.id}
@@ -1025,7 +1335,7 @@ function App() {
               </p>
             </div>
 
-            {isStaff ? (
+            {canViewData ? (
               <>
                 <div className="stats-grid">
                   <Stat
@@ -1034,13 +1344,21 @@ function App() {
                   />
 
                   <Stat
-                    title="Open Sessions"
-                    value={sessions.filter((s) => s.is_open).length}
+                    title={isTeacher ? "Assigned Subjects" : "Open Sessions"}
+                    value={
+                      isTeacher
+                        ? teacherSubjects.length
+                        : sessions.filter((s) => s.is_open).length
+                    }
                   />
 
                   <Stat
-                    title="Closed Sessions"
-                    value={closedSessions.length}
+                    title={isTeacher ? "Closed Sessions" : "Closed Sessions"}
+                    value={
+                      isTeacher
+                        ? Number(selectedTeacherReport[0]?.total_sessions || 0)
+                        : closedSessions.length
+                    }
                   />
 
                   <Stat
@@ -1055,15 +1373,28 @@ function App() {
                   />
                 </div>
 
+                {isTeacher && (
+                  <div className="panel">
+                    <h3>My Assigned Subjects</h3>
+                    {teacherSubjects.length ? (
+                      <p>{teacherSubjects.join(" · ")}</p>
+                    ) : (
+                      <p>No subjects have been assigned to your account yet.</p>
+                    )}
+                  </div>
+                )}
+
                 <div className="panel">
                   <h3>Quick Links</h3>
 
                   <div className="quick-links">
-                    <button
-                      onClick={() => setActive("attendance")}
-                    >
-                      Manage Attendance
-                    </button>
+                    {isStaff && (
+                      <button
+                        onClick={() => setActive("attendance")}
+                      >
+                        Manage Attendance
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setActive("analytics")}
@@ -1190,7 +1521,9 @@ function App() {
         {active === "timetable" && (
           <section className="page-content">
             <div className="panel">
-              <h3>Official Class Timetable</h3>
+              <h3>
+                {isTeacher ? "My Assigned Timetable" : "Official Class Timetable"}
+              </h3>
 
               <div className="table-wrapper">
                 <table>
@@ -1226,6 +1559,14 @@ function App() {
                         </td>
                       </tr>
                     ))}
+
+                    {timetable.length === 0 && (
+                      <tr>
+                        <td colSpan="5">
+                          No timetable entries found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1537,71 +1878,29 @@ function App() {
         )}
 
         {/* STUDENTS */}
-        {active === "students" && isStaff && (
+        {active === "students" && canViewData && (
           <section className="page-content">
-            <div className="panel">
-              <h3>Add New Student</h3>
-
-              <form onSubmit={addStudent}>
-                <label>Student Name</label>
-
-                <input
-                  value={newStudentName}
-                  onChange={(e) =>
-                    setNewStudentName(e.target.value)
-                  }
-                  required
-                />
-
-                <label>Mobile Number</label>
-
-                <input
-                  value={newStudentPhone}
-                  onChange={(e) =>
-                    setNewStudentPhone(e.target.value)
-                  }
-                  required
-                />
-
-                <button
-                  className="primary-btn"
-                  disabled={busy}
-                >
-                  Add Student
-                </button>
-              </form>
-            </div>
-
-            {isAdmin && (
+            {isStaff && (
               <div className="panel">
-                <h3>Link Student Account</h3>
+                <h3>Add New Student</h3>
 
-                <form onSubmit={linkStudent}>
-                  <label>Select Student</label>
-
-                  <select
-                    value={linkStudentId}
-                    onChange={(e) =>
-                      setLinkStudentId(e.target.value)
-                    }
-                    required
-                  >
-                    <option value="">Choose student</option>
-
-                    {students.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} — {s.mobile_number}
-                      </option>
-                    ))}
-                  </select>
-
-                  <label>Student Signup Email</label>
+                <form onSubmit={addStudent}>
+                  <label>Student Name</label>
 
                   <input
-                    type="email"
-                    value={linkEmail}
+                    value={newStudentName}
                     onChange={(e) =>
-                      setLinkEmail(e.target.value)
+                      setNewStudentName(e.target.value)
+                    }
+                    required
+                  />
+
+                  <label>Mobile Number</label>
+
+                  <input
+                    value={newStudentPhone}
+                    onChange={(e) =>
+                      setNewStudentPhone(e.target.value)
                     }
                     required
                   />
@@ -1610,14 +1909,137 @@ function App() {
                     className="primary-btn"
                     disabled={busy}
                   >
-                    Link Account
+                    Add Student
                   </button>
                 </form>
               </div>
             )}
 
+            {isAdmin && (
+              <>
+                <div className="panel">
+                  <h3>Link Student Account</h3>
+
+                  <form onSubmit={linkStudent}>
+                    <label>Select Student</label>
+
+                    <select
+                      value={linkStudentId}
+                      onChange={(e) =>
+                        setLinkStudentId(e.target.value)
+                      }
+                      required
+                    >
+                      <option value="">Choose student</option>
+
+                      {students.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} — {s.mobile_number}
+                        </option>
+                      ))}
+                    </select>
+
+                    <label>Student Signup Email</label>
+
+                    <input
+                      type="email"
+                      value={linkEmail}
+                      onChange={(e) =>
+                        setLinkEmail(e.target.value)
+                      }
+                      required
+                    />
+
+                    <button
+                      className="primary-btn"
+                      disabled={busy}
+                    >
+                      Link Student Account
+                    </button>
+                  </form>
+                </div>
+
+                <div className="panel">
+                  <h3>Link Teacher Account</h3>
+
+                  <p>
+                    Select the teacher from the official roster.
+                    The signup email and registered mobile number
+                    must match before Teacher access is activated.
+                  </p>
+
+                  <form onSubmit={linkTeacherAccount}>
+                    <label>Select Teacher</label>
+
+                    <select
+                      value={linkTeacherId}
+                      onChange={(e) =>
+                        setLinkTeacherId(e.target.value)
+                      }
+                      required
+                    >
+                      <option value="">Choose teacher</option>
+
+                      {teachers.map((teacher) => (
+                        <option key={teacher.id} value={teacher.id}>
+                          {teacher.name} — {teacher.mobile_number}
+                        </option>
+                      ))}
+                    </select>
+
+                    <label>Teacher Signup Email</label>
+
+                    <input
+                      type="email"
+                      value={linkTeacherEmail}
+                      onChange={(e) =>
+                        setLinkTeacherEmail(e.target.value)
+                      }
+                      placeholder="Teacher's registered signup email"
+                      required
+                    />
+
+                    <button
+                      className="primary-btn"
+                      disabled={busy}
+                    >
+                      {busy ? "Linking..." : "Link Teacher Account"}
+                    </button>
+                  </form>
+                </div>
+              </>
+            )}
+
             <div className="panel">
-              <h3>Student Directory ({students.length})</h3>
+              <h3>
+                {isTeacher
+                  ? `Student Directory (${selectedTeacherReport.length})`
+                  : `Student Directory (${students.length})`}
+              </h3>
+
+              {isTeacher && (
+                <>
+                  <label>Select Assigned Subject</label>
+
+                  <select
+                    value={teacherSubjectSelected}
+                    onChange={(e) =>
+                      changeTeacherSubject(e.target.value)
+                    }
+                  >
+                    {teacherSubjects.map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+
+                  <p>
+                    Showing the full class list for this subject.
+                    Practical batches are not separated.
+                  </p>
+                </>
+              )}
 
               <input
                 value={search}
@@ -1628,19 +2050,63 @@ function App() {
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Mobile Number</th>
-                    </tr>
+                    {isTeacher ? (
+                      <tr>
+                        <th>Student Name</th>
+                        <th>Attendance Percentage</th>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <th>Name</th>
+                        <th>Mobile Number</th>
+                        <th>Present</th>
+                        <th>Closed Sessions</th>
+                        <th>Percentage</th>
+                      </tr>
+                    )}
                   </thead>
 
                   <tbody>
-                    {filteredStudents.map((s) => (
-                      <tr key={s.id}>
-                        <td>{s.name}</td>
-                        <td>{s.mobile_number}</td>
+                    {isTeacher
+                      ? filteredStudents.map((s) => {
+                          const a = studentAnalytics.find(
+                            (x) => x.id === s.id
+                          );
+
+                          return (
+                            <tr key={s.id}>
+                              <td>{s.name}</td>
+                              <td>
+                                {a && a.total > 0
+                                  ? `${a.percentage}%`
+                                  : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      : filteredStudents.map((s) => {
+                          const a = studentAnalytics.find(
+                            (x) => x.id === s.id
+                          );
+
+                          return (
+                            <tr key={s.id}>
+                              <td>{s.name}</td>
+                              <td>{s.mobile_number}</td>
+                              <td>{a ? a.attended : 0}</td>
+                              <td>{a ? a.total : 0}</td>
+                              <td>{a ? `${a.percentage}%` : "0%"}</td>
+                            </tr>
+                          );
+                        })}
+
+                    {filteredStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={isTeacher ? 2 : 5}>
+                          No students found.
+                        </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1649,17 +2115,39 @@ function App() {
         )}
 
         {/* REPORTS */}
-        {active === "reports" && isStaff && (
+        {active === "reports" && canViewData && (
           <section className="page-content">
             <div className="panel">
               <h3>Attendance Reports</h3>
 
               <p>Reports include closed sessions only.</p>
 
+              {isTeacher && (
+                <>
+                  <label>Select Subject</label>
+                  <select
+                    value={teacherSubjectSelected}
+                    onChange={(e) =>
+                      changeTeacherSubject(e.target.value)
+                    }
+                  >
+                    {teacherSubjects.map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
               <div className="stats-grid">
                 <Stat
                   title="Closed Sessions"
-                  value={closedSessions.length}
+                  value={
+                    isTeacher
+                      ? Number(selectedTeacherReport[0]?.total_sessions || 0)
+                      : closedSessions.length
+                  }
                 />
 
                 <Stat
@@ -1682,6 +2170,7 @@ function App() {
               <button
                 className="primary-btn"
                 onClick={exportCSV}
+                disabled={isTeacher && !teacherSubjectSelected}
               >
                 Export Analytics CSV
               </button>
@@ -1690,15 +2179,36 @@ function App() {
         )}
 
         {/* ANALYTICS */}
-        {active === "analytics" && isStaff && (
+        {active === "analytics" && canViewData && (
           <section className="page-content">
             <div className="panel">
-              <h3>Class Attendance Analytics</h3>
+              <h3>
+                {isTeacher
+                  ? "My Subject Analytics"
+                  : "Class Attendance Analytics"}
+              </h3>
 
               <p>
-                Only closed sessions are included in these
-                calculations.
+                Only closed sessions are included in these calculations.
               </p>
+
+              {isTeacher && (
+                <>
+                  <label>Select Subject</label>
+                  <select
+                    value={teacherSubjectSelected}
+                    onChange={(e) =>
+                      changeTeacherSubject(e.target.value)
+                    }
+                  >
+                    {teacherSubjects.map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
 
               <div className="stats-grid">
                 <Stat
@@ -1708,7 +2218,11 @@ function App() {
 
                 <Stat
                   title="Closed Sessions"
-                  value={closedSessions.length}
+                  value={
+                    isTeacher
+                      ? Number(selectedTeacherReport[0]?.total_sessions || 0)
+                      : closedSessions.length
+                  }
                 />
 
                 <Stat
@@ -1741,78 +2255,136 @@ function App() {
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr>
-                      <th>Student</th>
-                      <th>Present</th>
-                      <th>Absent</th>
-                      <th>Total Closed</th>
-                      <th>Percentage</th>
-                      <th>Remark</th>
-                    </tr>
+                    {isTeacher ? (
+                      <tr>
+                        <th>Student</th>
+                        <th>Attendance Percentage</th>
+                      </tr>
+                    ) : (
+                      <tr>
+                        <th>Student</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Total Closed</th>
+                        <th>Percentage</th>
+                        <th>Remark</th>
+                      </tr>
+                    )}
                   </thead>
 
                   <tbody>
                     {studentAnalytics.map((s) => (
                       <tr key={s.id}>
                         <td>{s.name}</td>
-                        <td>{s.attended}</td>
-                        <td>{s.missed}</td>
-                        <td>{s.total}</td>
 
-                        <td>
-                          {s.total
-                            ? `${s.percentage}%`
-                            : "—"}
-                        </td>
+                        {isTeacher ? (
+                          <td>
+                            {s.total > 0
+                              ? `${s.percentage}%`
+                              : "—"}
+                          </td>
+                        ) : (
+                          <>
+                            <td>{s.attended}</td>
+                            <td>{s.missed}</td>
+                            <td>{s.total}</td>
 
-                        <td>
-                          {s.total === 0
-                            ? "No data"
-                            : s.percentage < 75
-                            ? "Below 75%"
-                            : "Good"}
-                        </td>
+                            <td>
+                              {s.total
+                                ? `${s.percentage}%`
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {s.total === 0
+                                ? "No data"
+                                : s.percentage < 75
+                                ? "Below 75%"
+                                : "Good"}
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ))}
+
+                    {studentAnalytics.length === 0 && (
+                      <tr>
+                        <td colSpan={isTeacher ? 2 : 6}>
+                          No attendance data available.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className="panel">
-              <h3>Subject-wise Attendance</h3>
+            {!isTeacher && (
+              <div className="panel">
+                <h3>Subject-wise Attendance</h3>
 
-              <div className="table-wrapper">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Subject</th>
-                      <th>Present Marks</th>
-                      <th>Possible Marks</th>
-                      <th>Class Percentage</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {subjectAnalytics.map((s) => (
-                      <tr key={s.subject}>
-                        <td>{s.subject}</td>
-                        <td>{s.present}</td>
-                        <td>{s.total * students.length}</td>
-                        <td>{`${s.percentage}%`}</td>
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>Present Marks</th>
+                        <th>Possible Marks</th>
+                        <th>Class Percentage</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
 
-              <button
-                className="primary-btn"
-                onClick={exportCSV}
-              >
-                Export Analytics CSV
-              </button>
-            </div>
+                    <tbody>
+                      {subjectAnalytics.map((s) => (
+                        <tr key={s.subject}>
+                          <td>{s.subject}</td>
+                          <td>{s.present}</td>
+                          <td>{s.possible}</td>
+                          <td>{`${s.percentage}%`}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button
+                  className="primary-btn"
+                  onClick={exportCSV}
+                >
+                  Export Analytics CSV
+                </button>
+              </div>
+            )}
+
+            {isTeacher && (
+              <div className="panel">
+                <h3>Assigned Subject Summary</h3>
+
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>Students</th>
+                        <th>Closed Sessions</th>
+                        <th>Class Attendance</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {subjectAnalytics.map((s) => (
+                        <tr key={s.subject}>
+                          <td>{s.subject}</td>
+                          <td>{teacherReports[s.subject]?.length || 0}</td>
+                          <td>{s.total}</td>
+                          <td>{s.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -1830,10 +2402,28 @@ function App() {
                 <strong>Role:</strong> {role.toUpperCase()}
               </p>
 
-              <p>
-                <strong>Student Account:</strong>{" "}
-                {profile?.student_id ? "Linked" : "Not linked"}
-              </p>
+              {!isTeacher && (
+                <p>
+                  <strong>Student Account:</strong>{" "}
+                  {profile?.student_id ? "Linked" : "Not linked"}
+                </p>
+              )}
+
+              {isTeacher && (
+                <>
+                  <p>
+                    <strong>Teacher Account:</strong>{" "}
+                    {profile?.teacher_id ? "Linked" : "Not linked"}
+                  </p>
+
+                  <p>
+                    <strong>Assigned Subjects:</strong>{" "}
+                    {teacherSubjects.length
+                      ? teacherSubjects.join(", ")
+                      : "No subjects assigned"}
+                  </p>
+                </>
+              )}
 
               <button
                 className="primary-btn"
