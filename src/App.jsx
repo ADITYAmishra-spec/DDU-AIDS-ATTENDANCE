@@ -30,6 +30,7 @@ const menuItems = [
   { id: "reports", label: "Reports", staff: true },
   { id: "analytics", label: "Analytics", staff: true },
   { id: "settings", label: "Settings" },
+  { id: "devices", label: "Device Requests", adminOnly: true },
 ];
 
 const EMAIL_REDIRECT_URL =
@@ -74,6 +75,32 @@ function Stat({ title, value, color }) {
   );
 }
 
+function getDeviceToken() {
+  const key = "ddu_aids_device_token_v1";
+  let token = localStorage.getItem(key);
+
+  if (!token) {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    token = Array.from(bytes, (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ).join("");
+    localStorage.setItem(key, token);
+  }
+
+  return token;
+}
+
+function getDeviceName() {
+  const ua = navigator.userAgent || "Browser device";
+  if (/Android/i.test(ua)) return "Android device";
+  if (/iPhone|iPad|iPod/i.test(ua)) return "Apple mobile device";
+  if (/Windows/i.test(ua)) return "Windows device";
+  if (/Macintosh|Mac OS/i.test(ua)) return "Mac device";
+  if (/Linux/i.test(ua)) return "Linux device";
+  return "Browser device";
+}
+
 function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -108,6 +135,16 @@ function App() {
   const [signupPhone, setSignupPhone] = useState("");
   const [signupType, setSignupType] = useState("student");
   const [isSignup, setIsSignup] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+  // REGISTERED DEVICE SECURITY
+  const [deviceStatus, setDeviceStatus] = useState("checking");
+  const [deviceMessage, setDeviceMessage] = useState("");
+  const [deviceUserId, setDeviceUserId] = useState("");
+  const [deviceRequests, setDeviceRequests] = useState([]);
 
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentPhone, setNewStudentPhone] = useState("");
@@ -311,10 +348,22 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+        setForgotMode(false);
+        setError("");
+        setMessage("Choose a new password for your account.");
+      }
       setSession(newSession);
 
       if (!newSession) {
+        setDeviceStatus("checking");
+        setDeviceMessage("");
+        setDeviceUserId("");
+        setDeviceRequests([]);
+        setRecoveryMode(false);
+        setForgotMode(false);
         setProfile(null);
         setStudents([]);
         setTimetable([]);
@@ -344,6 +393,8 @@ function App() {
   // AUTOMATIC DATA REFRESH
   useEffect(() => {
     if (!session || !profile) return;
+    if (!recoveryMode && deviceUserId !== session.user.id) return;
+    if (!recoveryMode && !["approved", "exempt"].includes(deviceStatus)) return;
 
     let refreshing = false;
 
@@ -369,6 +420,7 @@ function App() {
 
         if (isAdmin) {
           tasks.push(loadTeachers());
+          tasks.push(loadDeviceRequests());
         }
 
         if (profile.student_id && !isTeacher) {
@@ -396,6 +448,9 @@ function App() {
     profile?.student_id,
     profile?.role,
     selectedSession,
+    deviceUserId,
+    deviceStatus,
+    recoveryMode,
   ]);
 
   // LOAD ATTENDANCE WHEN SESSION CHANGES
@@ -422,6 +477,79 @@ function App() {
 
     setProfile(data);
   }
+
+  // REGISTER OR VERIFY THE CURRENT BROWSER DEVICE
+  useEffect(() => {
+    if (!session?.user?.id || !profile?.id) return;
+    if (recoveryMode) return;
+
+    let cancelled = false;
+    let checking = false;
+    const userId = session.user.id;
+
+    async function verifyDevice() {
+      if (checking) return;
+      checking = true;
+      setDeviceUserId("");
+      setDeviceStatus("checking");
+      setDeviceMessage("");
+
+      if (profile.role === "admin" || profile.role === "cr") {
+        if (!cancelled) {
+          setDeviceUserId(userId);
+          setDeviceStatus("exempt");
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.rpc(
+          "register_or_check_my_device",
+          {
+            p_device_token: getDeviceToken(),
+            p_device_name: getDeviceName(),
+          }
+        );
+
+        if (error) throw error;
+        const result = Array.isArray(data) ? data[0] : data;
+        const status = result?.status;
+
+        if (!["approved", "pending", "rejected", "exempt"].includes(status)) {
+          throw new Error(result?.message || "Could not verify this device.");
+        }
+
+        if (!cancelled) {
+          setDeviceUserId(userId);
+          setDeviceStatus(status);
+          setDeviceMessage(
+            result?.message ||
+              (status === "approved"
+                ? "This device is approved."
+                : "This device is waiting for Admin approval.")
+          );
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setDeviceUserId(userId);
+          setDeviceStatus("error");
+          setDeviceMessage(err.message || "Device verification failed.");
+        }
+      } finally {
+        checking = false;
+      }
+    }
+
+    verifyDevice();
+    const verificationTimer =
+      profile.role === "admin" || profile.role === "cr"
+        ? null
+        : setInterval(verifyDevice, 12000);
+    return () => {
+      cancelled = true;
+      if (verificationTimer) clearInterval(verificationTimer);
+    };
+  }, [session?.user?.id, profile?.id, profile?.role, recoveryMode]);
 
   // AUTHENTICATION
   async function handleAuth(event) {
@@ -465,6 +593,96 @@ function App() {
 
         setMessage("Login successful!");
       }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleForgotPassword(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        loginEmail.trim(),
+        { redirectTo: EMAIL_REDIRECT_URL }
+      );
+      if (error) throw error;
+      setMessage(
+        "If an account exists for this email, a password reset link has been sent."
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePasswordUpdate(event) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (error) throw error;
+
+      setRecoveryMode(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setMessage("Password updated successfully. You can now continue.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadDeviceRequests() {
+    if (!isAdmin) return;
+    const { data, error } = await supabase.rpc("admin_list_user_devices");
+    if (error) {
+      setError("Device requests: " + error.message);
+      return;
+    }
+    setDeviceRequests(data || []);
+  }
+
+  async function reviewDevice(deviceId, action) {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const functionName =
+        action === "approve"
+          ? "admin_approve_user_device"
+          : "admin_reject_user_device";
+      const { error } = await supabase.rpc(functionName, {
+        p_device_id: deviceId,
+      });
+      if (error) throw error;
+      setMessage(
+        action === "approve"
+          ? "Device approved successfully."
+          : "Device request rejected."
+      );
+      await loadDeviceRequests();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1038,6 +1256,7 @@ function App() {
             {
               p_lat: position.coords.latitude,
               p_lon: position.coords.longitude,
+              p_device_token: getDeviceToken(),
             }
           );
 
@@ -1170,6 +1389,43 @@ function App() {
     );
   }
 
+  // PASSWORD RECOVERY SCREEN
+  if (recoveryMode) {
+    return (
+      <div className="login-page">
+        <div className="login-box">
+          <h1>DDU AIDS</h1>
+          <p>Set a new password</p>
+          <form onSubmit={handlePasswordUpdate}>
+            <label>New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password"
+              minLength={6}
+              required
+            />
+            <label>Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+              placeholder="Confirm new password"
+              minLength={6}
+              required
+            />
+            <button className="primary-btn" disabled={busy}>
+              {busy ? "Updating..." : "Update Password"}
+            </button>
+          </form>
+          {message && <p className="success-message">{message}</p>}
+          {error && <p className="error-message">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
   // LOGIN / SIGNUP SCREEN
   if (!session) {
     return (
@@ -1178,6 +1434,34 @@ function App() {
           <h1>DDU AIDS</h1>
           <p>Attendance Management Portal</p>
 
+          {forgotMode ? (
+            <form onSubmit={handleForgotPassword}>
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="Enter your registered email"
+                required
+              />
+              <button className="primary-btn" disabled={busy}>
+                {busy ? "Please wait..." : "Send Reset Link"}
+              </button>
+              <p>
+                <button
+                  type="button"
+                  className="text-btn"
+                  onClick={() => {
+                    setForgotMode(false);
+                    setError("");
+                    setMessage("");
+                  }}
+                >
+                  Back to Login
+                </button>
+              </p>
+            </form>
+          ) : (
           <form onSubmit={handleAuth}>
             {isSignup && (
               <>
@@ -1236,8 +1520,25 @@ function App() {
                 : "Login"}
             </button>
           </form>
+          )}
 
-          <p>
+          {!forgotMode && !isSignup && (
+            <p style={{ marginTop: 12, textAlign: "right" }}>
+              <button
+                type="button"
+                className="text-btn"
+                onClick={() => {
+                  setForgotMode(true);
+                  setError("");
+                  setMessage("");
+                }}
+              >
+                Forgot Password?
+              </button>
+            </p>
+          )}
+
+          {!forgotMode && <p>
             {isSignup
               ? "Already have an account?"
               : "New student or teacher?"}{" "}
@@ -1251,7 +1552,7 @@ function App() {
             >
               {isSignup ? "Login" : "Create Account"}
             </button>
-          </p>
+          </p>}
 
           {message && (
             <p className="success-message">{message}</p>
@@ -1260,6 +1561,38 @@ function App() {
           {error && (
             <p className="error-message">{error}</p>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // DEVICE APPROVAL GATE — STUDENTS AND TEACHERS
+  if (
+    profile &&
+    (deviceUserId !== session?.user?.id ||
+      !["approved", "exempt"].includes(deviceStatus))
+  ) {
+    return (
+      <div className="login-page">
+        <div className="login-box">
+          <h1>DDU AIDS</h1>
+          <p>Registered Device Security</p>
+          <h3>
+            {deviceStatus === "pending"
+              ? "Waiting for Admin Approval"
+              : deviceStatus === "checking"
+              ? "Verifying this device..."
+              : deviceStatus === "rejected"
+              ? "Device Request Rejected"
+              : "Device Verification Failed"}
+          </h3>
+          <p>
+            {deviceMessage ||
+              "This account can only be used after its registered device is approved."}
+          </p>
+          <button className="primary-btn" onClick={handleLogout}>
+            Logout
+          </button>
         </div>
       </div>
     );
@@ -1277,7 +1610,9 @@ function App() {
         <nav>
           {menuItems
             .filter((item) =>
-              isTeacher
+              item.adminOnly
+                ? isAdmin
+                : isTeacher
                 ? teacherMenuIds.includes(item.id)
                 : !item.staff || isStaff
             )
@@ -2389,6 +2724,83 @@ function App() {
         )}
 
         {/* SETTINGS */}
+        {active === "devices" && isAdmin && (
+          <section className="panel">
+            <h3>Registered Device Requests</h3>
+            <p>
+              Approve one registered device per student or teacher. Approving
+              a new device replaces the previously approved device.
+            </p>
+            <div className="quick-links">
+              <button onClick={loadDeviceRequests}>Refresh Requests</button>
+            </div>
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Device</th>
+                    <th>Status</th>
+                    <th>Requested</th>
+                    <th>Last Seen</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deviceRequests.map((item) => (
+                    <tr key={item.device_id}>
+                      <td>{item.user_email || item.user_id}</td>
+                      <td>{item.user_role}</td>
+                      <td>{item.device_name}</td>
+                      <td>{item.device_status}</td>
+                      <td>
+                        {item.requested_at
+                          ? new Date(item.requested_at).toLocaleString("en-IN")
+                          : "—"}
+                      </td>
+                      <td>
+                        {item.last_seen_at
+                          ? new Date(item.last_seen_at).toLocaleString("en-IN")
+                          : "—"}
+                      </td>
+                      <td>
+                        {item.device_status === "pending" ? (
+                          <div className="quick-links">
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                reviewDevice(item.device_id, "approve")
+                              }
+                            >
+                              Approve
+                            </button>
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                reviewDevice(item.device_id, "reject")
+                              }
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {!deviceRequests.length && (
+                    <tr>
+                      <td colSpan="7">No device requests found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
         {active === "settings" && (
           <section className="page-content">
             <div className="panel">
