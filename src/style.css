@@ -927,3 +927,116 @@ tbody tr:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =========================
+   DEVICE REQUESTS + ADMIN READABILITY FIX
+   Keeps the existing navy / gold theme.
+========================= */
+
+/* Ensure headings and supporting text on ordinary content pages
+   remain readable on the light page background. */
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4 {
+  color: var(--navy);
+}
+
+.main-content p,
+.main-content small,
+.main-content label {
+  color: #526078;
+}
+
+/* Keep the dark welcome banner's intentional white typography. */
+.main-content .welcome-panel h1,
+.main-content .welcome-panel h2,
+.main-content .welcome-panel h3,
+.main-content .welcome-panel h4 {
+  color: #ffffff;
+}
+
+.main-content .welcome-panel p,
+.main-content .welcome-panel small,
+.main-content .welcome-panel label {
+  color: #d1dced;
+}
+
+/* Device request / admin cards: clear text and table contrast. */
+.main-content .panel,
+.main-content .panel * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.main-content .panel h1,
+.main-content .panel h2,
+.main-content .panel h3,
+.main-content .panel h4 {
+  color: var(--navy);
+}
+
+.main-content .panel p,
+.main-content .panel small,
+.main-content .panel label {
+  color: #526078;
+}
+
+.main-content .panel table th {
+  color: #273754;
+  background: #f0f3f8;
+}
+
+.main-content .panel table td {
+  color: #39465d;
+}
+
+/* Buttons inside admin panels should never become white-on-white. */
+.main-content .panel button:not(.primary-btn):not(:disabled) {
+  color: #263754;
+}
+
+.main-content .panel button:not(.primary-btn):not(:disabled):hover {
+  color: #172744;
+}
+
+/* Keep approve / reject actions distinct and readable when class names exist. */
+.main-content .panel button.approve-btn,
+.main-content .panel button.approve,
+.main-content .panel button[class*="approve"] {
+  border-color: #b9e2cf;
+  background: #edf8f2;
+  color: #176e4b;
+}
+
+.main-content .panel button.reject-btn,
+.main-content .panel button.reject,
+.main-content .panel button[class*="reject"] {
+  border-color: #edc5c8;
+  background: #fff1f2;
+  color: #a93642;
+}
+
+/* Prevent long device names / emails from breaking the request layout. */
+.main-content .panel table {
+  min-width: 680px;
+}
+
+.main-content .table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* On narrow screens, keep admin tables scrollable instead of squeezing columns. */
+@media (max-width: 650px) {
+  .main-content .panel {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .main-content .panel table th,
+  .main-content .panel table td {
+    padding: 11px 12px;
+    font-size: 12px;
+  }
+}
