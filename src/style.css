@@ -256,6 +256,7 @@ button:disabled {
 .sidebar {
   position: sticky;
   top: 0;
+  flex: 0 0 260px;
   width: 260px;
   min-width: 260px;
   height: 100vh;
@@ -263,6 +264,7 @@ button:disabled {
   padding: 28px 18px 20px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(201, 164, 92, 0.09), transparent 32%),
     linear-gradient(180deg, #111e37 0%, #0c172c 100%);
@@ -295,13 +297,35 @@ button:disabled {
 
 .sidebar nav {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 7px;
+  min-height: 0;
   margin-top: 29px;
+  padding: 0 2px 8px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(215, 184, 117, 0.45) transparent;
+}
+
+.sidebar nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(215, 184, 117, 0.45);
 }
 
 .sidebar nav button {
   position: relative;
+  flex: 0 0 auto;
+  display: block;
   width: 100%;
   min-height: 46px;
   padding: 12px 15px;
@@ -330,6 +354,7 @@ button:disabled {
 }
 
 .sidebar-bottom {
+  flex: 0 0 auto;
   margin-top: auto;
   padding: 20px 8px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.11);
@@ -756,6 +781,7 @@ tbody tr:hover {
 
 @media (max-width: 1000px) {
   .sidebar {
+    flex-basis: 225px;
     width: 225px;
     min-width: 225px;
   }
@@ -781,11 +807,13 @@ tbody tr:hover {
   .sidebar {
     position: relative;
     top: auto;
+    flex: 0 0 auto;
     width: 100%;
     min-width: 0;
     height: auto;
     min-height: auto;
     padding: 16px;
+    overflow: visible;
   }
 
   .brand {
@@ -798,9 +826,13 @@ tbody tr:hover {
 
   .sidebar nav {
     display: grid;
+    flex: 0 0 auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 7px;
+    min-height: auto;
     margin-top: 16px;
+    padding: 0;
+    overflow: visible;
   }
 
   .sidebar nav button {
@@ -925,118 +957,5 @@ tbody tr:hover {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-
-/* =========================
-   DEVICE REQUESTS + ADMIN READABILITY FIX
-   Keeps the existing navy / gold theme.
-========================= */
-
-/* Ensure headings and supporting text on ordinary content pages
-   remain readable on the light page background. */
-.main-content h1,
-.main-content h2,
-.main-content h3,
-.main-content h4 {
-  color: var(--navy);
-}
-
-.main-content p,
-.main-content small,
-.main-content label {
-  color: #526078;
-}
-
-/* Keep the dark welcome banner's intentional white typography. */
-.main-content .welcome-panel h1,
-.main-content .welcome-panel h2,
-.main-content .welcome-panel h3,
-.main-content .welcome-panel h4 {
-  color: #ffffff;
-}
-
-.main-content .welcome-panel p,
-.main-content .welcome-panel small,
-.main-content .welcome-panel label {
-  color: #d1dced;
-}
-
-/* Device request / admin cards: clear text and table contrast. */
-.main-content .panel,
-.main-content .panel * {
-  -webkit-tap-highlight-color: transparent;
-}
-
-.main-content .panel h1,
-.main-content .panel h2,
-.main-content .panel h3,
-.main-content .panel h4 {
-  color: var(--navy);
-}
-
-.main-content .panel p,
-.main-content .panel small,
-.main-content .panel label {
-  color: #526078;
-}
-
-.main-content .panel table th {
-  color: #273754;
-  background: #f0f3f8;
-}
-
-.main-content .panel table td {
-  color: #39465d;
-}
-
-/* Buttons inside admin panels should never become white-on-white. */
-.main-content .panel button:not(.primary-btn):not(:disabled) {
-  color: #263754;
-}
-
-.main-content .panel button:not(.primary-btn):not(:disabled):hover {
-  color: #172744;
-}
-
-/* Keep approve / reject actions distinct and readable when class names exist. */
-.main-content .panel button.approve-btn,
-.main-content .panel button.approve,
-.main-content .panel button[class*="approve"] {
-  border-color: #b9e2cf;
-  background: #edf8f2;
-  color: #176e4b;
-}
-
-.main-content .panel button.reject-btn,
-.main-content .panel button.reject,
-.main-content .panel button[class*="reject"] {
-  border-color: #edc5c8;
-  background: #fff1f2;
-  color: #a93642;
-}
-
-/* Prevent long device names / emails from breaking the request layout. */
-.main-content .panel table {
-  min-width: 680px;
-}
-
-.main-content .table-wrapper {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-/* On narrow screens, keep admin tables scrollable instead of squeezing columns. */
-@media (max-width: 650px) {
-  .main-content .panel {
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .main-content .panel table th,
-  .main-content .panel table td {
-    padding: 11px 12px;
-    font-size: 12px;
   }
 }
