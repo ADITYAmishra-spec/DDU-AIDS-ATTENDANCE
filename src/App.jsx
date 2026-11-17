@@ -153,6 +153,11 @@ function App() {
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentPhone, setNewStudentPhone] = useState("");
   const [newSubject, setNewSubject] = useState("");
+  const [customSubject, setCustomSubject] = useState("");
+  const [customDate, setCustomDate] = useState(getIndiaDate());
+  const [customStartTime, setCustomStartTime] = useState("");
+  const [customEndTime, setCustomEndTime] = useState("");
+  const [customLocation, setCustomLocation] = useState("");
 
   const [linkEmail, setLinkEmail] = useState("");
   const [linkStudentId, setLinkStudentId] = useState("");
@@ -836,7 +841,7 @@ function App() {
   async function loadSessions() {
     const { data, error } = await supabase
       .from("attendance_sessions")
-      .select("id, subject, session_date, is_open, created_by")
+      .select("id, subject, session_date, is_open, created_by, is_custom, start_time, end_time, location")
       .order("session_date", { ascending: false })
       .order("created_at", { ascending: false });
 
@@ -1099,6 +1104,73 @@ function App() {
       setSelectedSession(data.id);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Custom sessions are created closed and must be opened by an Admin
+  // during their scheduled window. The RPCs enforce the role in the database.
+  async function createCustomSession(event) {
+    event.preventDefault();
+    if (!isAdmin) return;
+
+    const subject = customSubject.trim().toUpperCase();
+    if (!subject || !customDate || !customStartTime || !customEndTime) {
+      setError("Enter a subject, date, start time, and end time.");
+      return;
+    }
+    if (customStartTime >= customEndTime) {
+      setError("End time must be later than start time.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const { data, error } = await supabase.rpc("admin_create_custom_session", {
+        p_subject: subject,
+        p_session_date: customDate,
+        p_start_time: customStartTime,
+        p_end_time: customEndTime,
+        p_location: customLocation.trim() || null,
+      });
+      if (error) throw error;
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result?.success === false) throw new Error(result.message || "Could not create the custom session.");
+      const sessionId = result?.session_id;
+      setMessage("Custom session scheduled. It remains closed until an Admin opens it during the scheduled time.");
+      setCustomSubject("");
+      setCustomStartTime("");
+      setCustomEndTime("");
+      setCustomLocation("");
+      await loadSessions();
+      if (sessionId) setSelectedSession(sessionId);
+    } catch (err) {
+      setError(err.message || "Could not create the custom session.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openCustomSession(sessionId) {
+    if (!isAdmin) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const { data, error } = await supabase.rpc("admin_open_custom_session", {
+        p_session_id: sessionId,
+      });
+      if (error) throw error;
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result?.success === false) throw new Error(result.message || "Could not open the custom session.");
+      setMessage(result?.message || "Custom session opened.");
+      await loadSessions();
+      setSelectedSession(sessionId);
+    } catch (err) {
+      setError(err.message || "Could not open the custom session.");
     } finally {
       setBusy(false);
     }
@@ -1891,7 +1963,7 @@ function App() {
                         <tbody>
                           {todaySessions.map((s) => (
                             <tr key={s.id}>
-                              <td>{s.subject}</td>
+                              <td>{s.is_custom && <span className="custom-session-badge">Custom Class</span>} {s.subject}{s.is_custom && <> · {formatTime(s.start_time)}–{formatTime(s.end_time)}{s.location ? ` · ${s.location}` : ""}</>}</td>
                               <td>{formatDate(s.session_date)}</td>
                               <td className="status-present">
                                 OPEN
@@ -1933,7 +2005,7 @@ function App() {
                           <tbody>
                             {todaySessions.map((s) => (
                               <tr key={s.id}>
-                                <td>{s.subject}</td>
+                                <td>{s.is_custom && <span className="custom-session-badge">Custom Class</span>} {s.subject}{s.is_custom && <> · {formatTime(s.start_time)}–{formatTime(s.end_time)}{s.location ? ` · ${s.location}` : ""}</>}</td>
                                 <td>{formatDate(s.session_date)}</td>
                                 <td className="status-present">
                                   OPEN
@@ -2110,7 +2182,7 @@ function App() {
                         <option value="">Select an open session</option>
                         {todaySessions.map((item) => (
                           <option key={item.id} value={item.id}>
-                            {item.subject} — {formatDate(item.session_date)}
+                            {item.is_custom ? "[Custom Class] " : ""}{item.subject} — {formatDate(item.session_date)}
                           </option>
                         ))}
                       </select>
@@ -2203,6 +2275,45 @@ function App() {
         {/* STAFF ATTENDANCE */}
         {active === "attendance" && isStaff && (
           <section className="page-content">
+            {isAdmin && (
+              <>
+                <div className="panel custom-session-panel">
+                  <h3>Create Custom Class Session</h3>
+                  <p>Admin only. Custom sessions are clearly marked and do not change the regular timetable. The session starts closed; open it during the scheduled window, then use the existing close action to mark remaining students absent.</p>
+                  <form onSubmit={createCustomSession} className="custom-session-form">
+                    <label>Subject</label>
+                    <input value={customSubject} onChange={(e) => setCustomSubject(e.target.value)} placeholder="Example: AID101" maxLength={120} required />
+                    <label>Date</label>
+                    <input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} required />
+                    <label>Start Time</label>
+                    <input type="time" value={customStartTime} onChange={(e) => setCustomStartTime(e.target.value)} required />
+                    <label>End Time</label>
+                    <input type="time" value={customEndTime} onChange={(e) => setCustomEndTime(e.target.value)} required />
+                    <label>Room / Location <span className="optional-label">(optional)</span></label>
+                    <input value={customLocation} onChange={(e) => setCustomLocation(e.target.value)} placeholder="Example: Room 24" maxLength={160} />
+                    <button className="primary-btn" disabled={busy}>{busy ? "Saving..." : "Schedule Custom Session"}</button>
+                  </form>
+                </div>
+                <div className="panel">
+                  <h3>Manage Custom Sessions</h3>
+                  <div className="table-wrapper">
+                    <table>
+                      <thead><tr><th>Subject</th><th>Date</th><th>Time</th><th>Room / Location</th><th>Status</th><th>Action</th></tr></thead>
+                      <tbody>
+                        {sessions.filter((s) => s.is_custom).map((s) => {
+                          const localNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                          const today = getIndiaDate();
+                          const nowTime = `${String(localNow.getHours()).padStart(2, "0")}:${String(localNow.getMinutes()).padStart(2, "0")}`;
+                          const inWindow = s.session_date === today && nowTime >= String(s.start_time || "").slice(0, 5) && nowTime < String(s.end_time || "").slice(0, 5);
+                          return <tr key={s.id}><td>{s.subject} <span className="custom-session-badge">Custom Class</span></td><td>{formatDate(s.session_date)}</td><td>{formatTime(s.start_time)}–{formatTime(s.end_time)}</td><td>{s.location || "—"}</td><td>{s.is_open ? "Open" : "Closed"}</td><td>{!s.is_open && inWindow ? <button className="primary-btn" type="button" disabled={busy} onClick={() => openCustomSession(s.id)}>Open Session</button> : !s.is_open ? "Available during scheduled time" : "Use close action below"}</td></tr>;
+                        })}
+                        {!sessions.some((s) => s.is_custom) && <tr><td colSpan="6">No custom sessions scheduled.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
             <div className="panel">
               <h3>Create Attendance Session</h3>
 
@@ -2247,7 +2358,7 @@ function App() {
 
                 {sessions.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.subject} — {formatDate(s.session_date)}{" "}
+                    {s.is_custom ? "[Custom Class] " : ""}{s.subject} — {formatDate(s.session_date)}{" "}
                     {s.is_open ? "(Open)" : "(Closed)"}
                   </option>
                 ))}

@@ -1036,6 +1036,63 @@ tbody tr:hover {
   font-weight: 800;
 }
 
+.custom-session-panel > p {
+  color: #69758a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.custom-session-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+  align-items: end;
+}
+
+.custom-session-form label {
+  display: block;
+  margin-top: 8px;
+  color: #35425a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.custom-session-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #e0e4eb;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.custom-session-form button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 10px;
+}
+
+.optional-label {
+  color: #788397;
+  font-weight: 500;
+}
+
+.custom-session-badge {
+  display: inline-block;
+  margin: 3px 0;
+  padding: 3px 8px;
+  border: 1px solid #d7e4ff;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #315b9d;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 @media (max-width: 650px) {
   .verification-request-box {
     padding: 15px;
@@ -1047,5 +1104,13 @@ tbody tr:hover {
 
   .verification-reason-cell {
     min-width: 180px;
+  }
+
+  .custom-session-form {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-session-form button {
+    width: 100%;
   }
 }
