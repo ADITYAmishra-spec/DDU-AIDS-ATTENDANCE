@@ -1625,10 +1625,27 @@ function App() {
   // LOGIN / SIGNUP SCREEN
   if (!session) {
     return (
-      <div className="login-page">
+      <div className="login-page login-split-page">
+        <section className="login-visual">
+          <div className="login-visual-brand">
+            <div className="login-visual-logo" aria-label="Deen Dayal Upadhyaya University official logo" />
+            <div>
+              <h2>DDU-AIDS</h2>
+              <p>Attendance</p>
+              <span>Deen Dayal Upadhyaya University</span>
+            </div>
+          </div>
+          <div className="login-visual-footer">
+            <span>Excellence in Education</span>
+            <span>Smart Management</span>
+            <span>A Better Tomorrow</span>
+          </div>
+        </section>
+        <div className="login-content">
         <div className="login-box">
-          <h1>DDU AIDS</h1>
-          <p>Attendance Management Portal</p>
+          <div className="login-card-logo" aria-label="Deen Dayal Upadhyaya University official logo" />
+          <h1>Welcome Back!</h1>
+          <p>Your Academic Journey, Beautifully Managed.</p>
 
           {forgotMode ? (
             <form onSubmit={handleForgotPassword}>
@@ -1757,6 +1774,7 @@ function App() {
           {error && (
             <p className="error-message">{error}</p>
           )}
+        </div>
         </div>
       </div>
     );
