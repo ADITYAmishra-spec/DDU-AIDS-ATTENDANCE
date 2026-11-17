@@ -31,6 +31,7 @@ const menuItems = [
   { id: "analytics", label: "Analytics", staff: true },
   { id: "settings", label: "Settings" },
   { id: "devices", label: "Device Requests", adminOnly: true },
+  { id: "attendance-requests", label: "Attendance Requests", staff: true },
 ];
 
 const EMAIL_REDIRECT_URL =
@@ -145,6 +146,9 @@ function App() {
   const [deviceMessage, setDeviceMessage] = useState("");
   const [deviceUserId, setDeviceUserId] = useState("");
   const [deviceRequests, setDeviceRequests] = useState([]);
+  const [verificationRequests, setVerificationRequests] = useState([]);
+  const [verificationReason, setVerificationReason] = useState("");
+  const [verificationSessionId, setVerificationSessionId] = useState("");
 
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentPhone, setNewStudentPhone] = useState("");
@@ -1302,6 +1306,128 @@ function App() {
     );
   }
 
+  // ATTENDANCE VERIFICATION REQUESTS
+  async function submitAttendanceVerification(event) {
+    event.preventDefault();
+
+    if (isTeacher || !profile?.student_id) {
+      setError("Your student account is not linked.");
+      return;
+    }
+
+    const sessionId = verificationSessionId || todaySessions[0]?.id;
+    const reason = verificationReason.trim();
+
+    if (!sessionId) {
+      setError("There is no open class session available for a request.");
+      return;
+    }
+
+    if (reason.length < 5 || reason.length > 500) {
+      setError("Please enter a reason between 5 and 500 characters.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "submit_attendance_verification_request",
+        {
+          p_session_id: sessionId,
+          p_reason: reason,
+        }
+      );
+
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result?.success === false) {
+        throw new Error(result.message || "Could not submit the request.");
+      }
+
+      setVerificationReason("");
+      setMessage(
+        result?.message ||
+          "Attendance verification request submitted. CR/Admin will review it."
+      );
+    } catch (err) {
+      setError(err.message || "Could not submit the request.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadAttendanceVerificationRequests() {
+    if (!isStaff) return;
+
+    const { data, error } = await supabase.rpc(
+      "admin_list_attendance_verification_requests"
+    );
+
+    if (error) {
+      setError("Attendance requests: " + error.message);
+      return;
+    }
+
+    setVerificationRequests(data || []);
+  }
+
+  async function reviewAttendanceVerification(requestId, action) {
+    if (!isStaff) return;
+
+    const note = window.prompt(
+      action === "approve"
+        ? "Enter verification note (e.g. physically verified in class):"
+        : "Enter reason for rejecting this request:"
+    );
+
+    if (note === null) return;
+    if (!note.trim()) {
+      setError("A review note is required for the audit record.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const { data, error } = await supabase.rpc(
+        "admin_review_attendance_verification_request",
+        {
+          p_request_id: requestId,
+          p_action: action,
+          p_review_note: note.trim(),
+        }
+      );
+
+      if (error) throw error;
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result?.success === false) {
+        throw new Error(result.message || "Could not review the request.");
+      }
+
+      setMessage(
+        result?.message ||
+          (action === "approve"
+            ? "Request approved and attendance updated."
+            : "Request rejected.")
+      );
+
+      await loadAttendanceVerificationRequests();
+      if (selectedSession) await loadAttendanceRecords(selectedSession);
+      await Promise.all([loadAllRecords(), loadMyAttendance()]);
+    } catch (err) {
+      setError(err.message || "Could not review the request.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // EXPORT ANALYTICS CSV
   function exportCSV() {
     let rows;
@@ -1624,6 +1750,9 @@ function App() {
                   setActive(item.id);
                   setMessage("");
                   setError("");
+                  if (item.id === "attendance-requests") {
+                    loadAttendanceVerificationRequests();
+                  }
                 }}
               >
                 {item.label}
@@ -1965,6 +2094,51 @@ function App() {
                       ? "Checking Location..."
                       : "Mark Attendance"}
                   </button>
+
+                  <div className="verification-request-box">
+                    <h3>GPS Attendance Problem?</h3>
+                    <p>
+                      If you are physically present in class but GPS attendance
+                      fails, submit a request. CR/Admin must verify it before
+                      your attendance can be corrected.
+                    </p>
+                    <form onSubmit={submitAttendanceVerification}>
+                      <label>Select Open Class Session</label>
+                      <select
+                        value={verificationSessionId || todaySessions[0]?.id || ""}
+                        onChange={(e) => setVerificationSessionId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select an open session</option>
+                        {todaySessions.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.subject} — {formatDate(item.session_date)}
+                          </option>
+                        ))}
+                      </select>
+
+                      <label>Reason for GPS failure</label>
+                      <textarea
+                        value={verificationReason}
+                        onChange={(e) => setVerificationReason(e.target.value)}
+                        placeholder="Example: I was inside Room 24, but the portal showed Out of Class."
+                        rows={3}
+                        maxLength={500}
+                        required
+                      />
+                      <button
+                        className="primary-btn"
+                        disabled={busy || todaySessions.length === 0}
+                      >
+                        {busy ? "Submitting..." : "Request Attendance Verification"}
+                      </button>
+                    </form>
+                    {todaySessions.length === 0 && (
+                      <p className="verification-hint">
+                        No open attendance session is available right now.
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -2720,6 +2894,111 @@ function App() {
                 </div>
               </div>
             )}
+          </section>
+        )}
+
+        {/* ATTENDANCE VERIFICATION REQUESTS */}
+        {active === "attendance-requests" && isStaff && (
+          <section className="page-content">
+            <div className="panel">
+              <h3>Attendance Verification Requests</h3>
+              <p>
+                Review students who report GPS failure while physically present.
+                Approve only after checking their presence. Every decision needs
+                a review note and is recorded for audit.
+              </p>
+              <div className="quick-links">
+                <button
+                  type="button"
+                  onClick={loadAttendanceVerificationRequests}
+                  disabled={busy}
+                >
+                  Refresh Requests
+                </button>
+              </div>
+              <div className="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Subject</th>
+                      <th>Date</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th>Submitted</th>
+                      <th>Review Note</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {verificationRequests.map((item) => (
+                      <tr key={item.request_id}>
+                        <td>
+                          <strong>{item.student_name || "Student"}</strong>
+                          <br />
+                          {item.student_mobile || "—"}
+                        </td>
+                        <td>{item.subject || "—"}</td>
+                        <td>{formatDate(item.session_date)}</td>
+                        <td className="verification-reason-cell">{item.reason}</td>
+                        <td>
+                          <span
+                            className={
+                              item.status === "approved"
+                                ? "status-present"
+                                : item.status === "rejected"
+                                ? "status-absent"
+                                : "verification-pending"
+                            }
+                          >
+                            {item.status?.toUpperCase()}
+                          </span>
+                        </td>
+                        <td>
+                          {item.created_at
+                            ? new Date(item.created_at).toLocaleString("en-IN")
+                            : "—"}
+                        </td>
+                        <td>{item.reviewer_note || "—"}</td>
+                        <td>
+                          {item.status === "pending" ? (
+                            <div className="quick-links">
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  reviewAttendanceVerification(item.request_id, "approve")
+                                }
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                  reviewAttendanceVerification(item.request_id, "reject")
+                                }
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            "Reviewed"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {!verificationRequests.length && (
+                      <tr>
+                        <td colSpan="8">
+                          No attendance verification requests found. Use Refresh Requests to check again.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </section>
         )}
 

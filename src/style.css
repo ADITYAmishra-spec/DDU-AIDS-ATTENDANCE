@@ -959,3 +959,93 @@ tbody tr:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* =========================
+   ATTENDANCE VERIFICATION REQUESTS
+========================= */
+
+.verification-request-box {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid #e8dfcc;
+  border-radius: 12px;
+  background: #fcfaf5;
+}
+
+.verification-request-box h3 {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+}
+
+.verification-request-box p,
+.verification-hint {
+  color: #69758a;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.verification-request-box form {
+  margin-top: 14px;
+}
+
+.verification-request-box label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #35425a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.verification-request-box select,
+.verification-request-box textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #e0e4eb;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.verification-request-box textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.verification-request-box .primary-btn {
+  margin-top: 12px;
+}
+
+.verification-hint {
+  margin-bottom: 0;
+}
+
+.verification-reason-cell {
+  min-width: 220px;
+  max-width: 320px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.verification-pending {
+  color: #9a6b16;
+  font-weight: 800;
+}
+
+@media (max-width: 650px) {
+  .verification-request-box {
+    padding: 15px;
+  }
+
+  .verification-request-box .primary-btn {
+    width: 100%;
+  }
+
+  .verification-reason-cell {
+    min-width: 180px;
+  }
+}
