@@ -544,14 +544,12 @@ function App() {
       }
     }
 
+    // Verify once when the authenticated user/profile changes.
+    // Do not poll every 12 seconds: that repeatedly resets the UI to
+    // "checking" and causes the device-verification flicker.
     verifyDevice();
-    const verificationTimer =
-      profile.role === "admin" || profile.role === "cr"
-        ? null
-        : setInterval(verifyDevice, 12000);
     return () => {
       cancelled = true;
-      if (verificationTimer) clearInterval(verificationTimer);
     };
   }, [session?.user?.id, profile?.id, profile?.role, recoveryMode]);
 
