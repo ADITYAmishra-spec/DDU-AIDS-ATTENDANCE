@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
+import campusImage from "./assets/ddu-campus.jpg";
+import universityLogo from "./assets/ddu-logo.jpg";
+import dashboardBanner from "./assets/banner-dashboard.jpg.jpg";
+import attendanceBanner from "./assets/banner-attendance.jpg.jpg";
+import punctualityIllustration from "./assets/char-punctual.png.png";
+import teacherIllustration from "./assets/char-teacher.png.png";
+import timetableIllustration from "./assets/char-timetable.png.png";
+import stackIllustration from "./assets/hero.png";
 import "./style.css";
 
 const days = {
@@ -1619,8 +1627,22 @@ function App() {
   // LOGIN / SIGNUP SCREEN
   if (!session) {
     return (
-      <div className="login-page">
+      <div className="login-page login-split">
+        <section
+          className="login-hero"
+          style={{ backgroundImage: `url(${campusImage})` }}
+          aria-label="Deen Dayal Upadhyaya University campus"
+        >
+          <div className="hero-title">
+            <img className="hero-crest" src={universityLogo} alt="DDU university logo" />
+            <h1>Deen Dayal</h1>
+            <h2>Upadhyaya University</h2>
+            <p>B.Tech Artificial Intelligence &amp; Data Science</p>
+          </div>
+          <img className="hero-stack" src={stackIllustration} alt="" aria-hidden="true" />
+        </section>
         <div className="login-box">
+          <img className="box-crest" src={universityLogo} alt="DDU university logo" />
           <h1>DDU AIDS</h1>
           <p>Attendance Management Portal</p>
 
@@ -1859,7 +1881,7 @@ function App() {
         {active === "dashboard" && (
           <section className="page-content">
             <div className="welcome-panel">
-              <img className="welcome-banner" src="./assets/ddu-campus-analytics.jpg" alt="DDU campus and attendance analytics" />
+              <img className="welcome-banner" src={dashboardBanner} alt="DDU campus and attendance analytics" />
               <div className="welcome-copy">
                 <span className="welcome-kicker">DEEN DAYAL UPADHYAYA UNIVERSITY · AIDS</span>
                 <h2>Welcome back to your campus</h2>
@@ -1921,7 +1943,7 @@ function App() {
                 <div className="panel">
                   <div className="illustrated-panel-heading">
                     <div><span className="section-eyebrow">STAY ON TRACK</span><h3>Quick Links</h3></div>
-                    <img src="./assets/student-punctuality.png" alt="Student celebrating punctual attendance" />
+                    <img src={punctualityIllustration} alt="Student celebrating punctual attendance" />
                   </div>
 
                   <div className="quick-links">
@@ -1984,7 +2006,7 @@ function App() {
                 <div className="panel">
                   <div className="illustrated-panel-heading student-class-heading">
                     <div><span className="section-eyebrow">YOUR CAMPUS DAY</span><h3>Today's Live Classes</h3></div>
-                    <img src="./assets/student-attendance-tablet.png" alt="Student using a tablet to mark attendance" />
+                    <img src={teacherIllustration} alt="Student using a tablet to mark attendance" />
                   </div>
 
                   {todaySessions.length === 0 ? (
@@ -2063,7 +2085,7 @@ function App() {
             <div className="panel">
               <div className="illustrated-panel-heading timetable-heading">
                 <div><span className="section-eyebrow">PLAN YOUR WEEK</span><h3>{isTeacher ? "My Assigned Timetable" : "Official Class Timetable"}</h3></div>
-                <img src="./assets/student-timetable.png" alt="Student reviewing a class calendar" />
+                <img src={timetableIllustration} alt="Student reviewing a class calendar" />
               </div>
 
               <div className="table-wrapper">
@@ -2282,6 +2304,10 @@ function App() {
         {/* STAFF ATTENDANCE */}
         {active === "attendance" && isStaff && (
           <section className="page-content">
+            <div className="attendance-visual-banner">
+              <img src={attendanceBanner} alt="Attendance management" />
+              <div><span>DDU AIDS</span><h3>Attendance Management</h3></div>
+            </div>
             {isAdmin && (
               <>
                 <div className="panel custom-session-panel">
