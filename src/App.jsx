@@ -1625,27 +1625,10 @@ function App() {
   // LOGIN / SIGNUP SCREEN
   if (!session) {
     return (
-      <div className="login-page login-split-page">
-        <section className="login-visual">
-          <div className="login-visual-brand">
-            <div className="login-visual-logo" aria-label="Deen Dayal Upadhyaya University official logo" />
-            <div>
-              <h2>DDU-AIDS</h2>
-              <p>Attendance</p>
-              <span>Deen Dayal Upadhyaya University</span>
-            </div>
-          </div>
-          <div className="login-visual-footer">
-            <span>Excellence in Education</span>
-            <span>Smart Management</span>
-            <span>A Better Tomorrow</span>
-          </div>
-        </section>
-        <div className="login-content">
+      <div className="login-page">
         <div className="login-box">
-          <div className="login-card-logo" aria-label="Deen Dayal Upadhyaya University official logo" />
-          <h1>Welcome Back!</h1>
-          <p>Your Academic Journey, Beautifully Managed.</p>
+          <h1>DDU AIDS</h1>
+          <p>Attendance Management Portal</p>
 
           {forgotMode ? (
             <form onSubmit={handleForgotPassword}>
@@ -1775,7 +1758,6 @@ function App() {
             <p className="error-message">{error}</p>
           )}
         </div>
-        </div>
       </div>
     );
   }
@@ -1881,10 +1863,14 @@ function App() {
         {active === "dashboard" && (
           <section className="page-content">
             <div className="welcome-panel">
-              <h2>Welcome to DDU AIDS Portal</h2>
-              <p>
-                {session.user.email} · {role.toUpperCase()}
-              </p>
+              <img className="welcome-banner" src="./assets/ddu-campus-analytics.jpg" alt="DDU campus and attendance analytics" />
+              <div className="welcome-copy">
+                <span className="welcome-kicker">DEEN DAYAL UPADHYAYA UNIVERSITY · AIDS</span>
+                <h2>Welcome back to your campus</h2>
+                <p>{session.user.email} <span aria-hidden="true">·</span> {role.toUpperCase()}</p>
+                <span className="welcome-note">Your classes, attendance and progress in one place.</span>
+              </div>
+              <span className="welcome-chip">ATTENDANCE PORTAL</span>
             </div>
 
             {canViewData ? (
@@ -1937,7 +1923,10 @@ function App() {
                 )}
 
                 <div className="panel">
-                  <h3>Quick Links</h3>
+                  <div className="illustrated-panel-heading">
+                    <div><span className="section-eyebrow">STAY ON TRACK</span><h3>Quick Links</h3></div>
+                    <img src="./assets/student-punctuality.png" alt="Student celebrating punctual attendance" />
+                  </div>
 
                   <div className="quick-links">
                     {isStaff && (
@@ -1997,7 +1986,10 @@ function App() {
             ) : (
               <>
                 <div className="panel">
-                  <h3>Today's Live Classes</h3>
+                  <div className="illustrated-panel-heading student-class-heading">
+                    <div><span className="section-eyebrow">YOUR CAMPUS DAY</span><h3>Today's Live Classes</h3></div>
+                    <img src="./assets/student-attendance-tablet.png" alt="Student using a tablet to mark attendance" />
+                  </div>
 
                   {todaySessions.length === 0 ? (
                     <p>
@@ -2073,9 +2065,10 @@ function App() {
         {active === "timetable" && (
           <section className="page-content">
             <div className="panel">
-              <h3>
-                {isTeacher ? "My Assigned Timetable" : "Official Class Timetable"}
-              </h3>
+              <div className="illustrated-panel-heading timetable-heading">
+                <div><span className="section-eyebrow">PLAN YOUR WEEK</span><h3>{isTeacher ? "My Assigned Timetable" : "Official Class Timetable"}</h3></div>
+                <img src="./assets/student-timetable.png" alt="Student reviewing a class calendar" />
+              </div>
 
               <div className="table-wrapper">
                 <table>

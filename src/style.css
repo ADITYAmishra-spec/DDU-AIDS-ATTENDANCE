@@ -1,2711 +1,1205 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
 
-
-
 :root {
-
-  font-family: 'Manrope', sans-serif;
-
-  color: #263B38;
-
-  background: #F3F4EE;
-
+  font-family: 'DM Sans', sans-serif;
+  color: #202b40;
+  background: #f5f6f9;
   font-synthesis: none;
-
   text-rendering: optimizeLegibility;
-
   font-weight: 400;
 
-
-
-  --navy: #102A2B;
-
-  --navy-light: #194343;
-
-  --navy-soft: #245957;
-
-  --gold: #BDA477;
-
-  --gold-light: #F0F1E9;
-
-  --background: #F3F4EE;
-
+  --navy: #101b32;
+  --navy-light: #1c2d4d;
+  --navy-soft: #263b60;
+  --gold: #c9a45c;
+  --gold-light: #f3e9d4;
+  --background: #f5f6f9;
   --white: #ffffff;
-
-  --text: #263B38;
-
-  --muted: #778681;
-
-  --border: #E2E8E2;
-
+  --text: #202b40;
+  --muted: #7d8799;
+  --border: #e7e9ef;
   --green: #16865e;
-
   --red: #c94d55;
 
-
-
   --shadow-sm: 0 4px 14px rgba(16, 27, 50, 0.045);
-
   --shadow-md: 0 12px 32px rgba(16, 27, 50, 0.075);
-
   --shadow-lg: 0 24px 65px rgba(4, 12, 27, 0.24);
-
 }
-
-
 
 * {
-
   box-sizing: border-box;
-
 }
-
-
 
 html {
-
   scroll-behavior: smooth;
-
 }
-
-
 
 body {
-
   margin: 0;
-
   min-width: 320px;
-
   min-height: 100vh;
-
   background: var(--background);
-
 }
-
-
 
 button,
-
 input,
-
 select {
-
   font: inherit;
-
 }
-
-
 
 button {
-
   cursor: pointer;
-
   transition: background 0.2s ease, color 0.2s ease,
-
     border-color 0.2s ease, transform 0.2s ease,
-
     box-shadow 0.2s ease;
-
 }
-
-
 
 button:disabled {
-
   opacity: 0.6;
-
   cursor: not-allowed;
-
   transform: none !important;
-
 }
-
-
 
 ::selection {
-
-  background: #D8C49A;
-
+  background: #e8d5ae;
   color: var(--navy);
-
 }
-
-
 
 :focus-visible {
-
   outline: 3px solid rgba(201, 164, 92, 0.45);
-
   outline-offset: 3px;
-
 }
-
-
 
 ::-webkit-scrollbar {
-
   width: 9px;
-
   height: 9px;
-
 }
-
-
 
 ::-webkit-scrollbar-track {
-
   background: #eef0f4;
-
 }
-
-
 
 ::-webkit-scrollbar-thumb {
-
   background: #c5cad4;
-
   border-radius: 20px;
-
 }
-
-
 
 ::-webkit-scrollbar-thumb:hover {
-
   background: #a6afbf;
-
 }
 
-
-
 /* =========================
-
    LOGIN PAGE
-
-\========================= */
-
-
+========================= */
 
 .login-page {
-
   position: relative;
-
   isolation: isolate;
-
   min-height: 100vh;
-
   width: 100%;
-
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   padding: 28px 18px;
-
   overflow: hidden;
-
   background:
-
     radial-gradient(ellipse at 15% 15%, rgba(201, 164, 92, 0.15), transparent 35%),
-
     radial-gradient(ellipse at 90% 85%, rgba(65, 93, 139, 0.25), transparent 38%),
-
-    linear-gradient(135deg, #091326 0%, #123638 48%, #0a1529 100%);
-
+    linear-gradient(135deg, #091326 0%, #142440 48%, #0a1529 100%);
 }
-
-
 
 .login-page::before,
-
 .login-page::after {
-
   content: "";
-
   position: absolute;
-
   z-index: -1;
-
   border: 1px solid rgba(201, 164, 92, 0.13);
-
   border-radius: 50%;
-
   pointer-events: none;
-
 }
-
-
 
 .login-page::before {
-
   width: 520px;
-
   height: 520px;
-
   top: -290px;
-
   right: -140px;
-
 }
-
-
 
 .login-page::after {
-
   width: 390px;
-
   height: 390px;
-
   bottom: -245px;
-
   left: -120px;
-
 }
-
-
 
 .login-box {
-
   position: relative;
-
   width: 100%;
-
   max-width: 440px;
-
   padding: 46px 40px 38px;
-
   border: 1px solid rgba(255, 255, 255, 0.65);
-
   border-radius: 23px;
-
   background: rgba(255, 255, 255, 0.97);
-
   box-shadow: var(--shadow-lg);
-
   text-align: center;
-
   animation: loginAppear 0.55s ease both;
-
 }
-
-
 
 .login-box::before {
-
   content: "";
-
   position: absolute;
-
   top: 0;
-
   left: 50%;
-
   width: 68px;
-
   height: 4px;
-
   border-radius: 0 0 8px 8px;
-
   background: var(--gold);
-
   transform: translateX(-50%);
-
 }
-
-
 
 .login-box h1 {
-
   margin: 0;
-
   color: var(--navy);
-
   font-family: 'Playfair Display', serif;
-
   font-size: 37px;
-
   font-weight: 800;
-
   letter-spacing: 0.5px;
-
 }
-
-
 
 .login-box > p {
-
   margin: 10px 0 30px;
-
   color: var(--muted);
-
   font-size: 13px;
-
   letter-spacing: 0.3px;
-
 }
-
-
 
 .login-box form {
-
   text-align: left;
-
 }
-
-
 
 .login-box label {
-
   display: block;
-
   margin-bottom: 2px;
-
   color: #34415a;
-
   font-size: 12px;
-
   font-weight: 700;
-
   letter-spacing: 0.35px;
-
 }
-
-
 
 .login-box input {
-
   width: 100%;
-
   height: 49px;
-
   padding: 0 15px !important;
-
   margin: 8px 0 19px !important;
-
   border: 1px solid #e0e4ec !important;
-
   border-radius: 10px !important;
-
   background: #f9fafc;
-
   color: var(--text);
-
   outline: none;
-
   font-size: 14px;
-
   transition: 0.2s ease;
-
 }
-
-
 
 .login-box input::placeholder {
-
   color: #a5adba;
-
 }
-
-
 
 .login-box input:hover {
-
   border-color: #c8ced9 !important;
-
 }
-
-
 
 .login-box input:focus {
-
   border-color: var(--gold) !important;
-
   background: #fff;
-
   box-shadow: 0 0 0 4px rgba(201, 164, 92, 0.13);
-
 }
-
-
 
 .login-box .primary-btn {
-
   width: 100%;
-
   min-height: 49px;
-
   margin-top: 5px;
-
   border-radius: 10px;
-
   font-size: 14px;
-
   letter-spacing: 0.25px;
-
 }
-
-
 
 .login-box > p:last-child {
-
   margin: 25px 0 0;
-
   color: #778196;
-
   font-size: 13px;
-
 }
-
-
 
 .text-btn {
-
   padding: 0 3px;
-
   border: none;
-
   background: none;
-
-  color: #947644;
-
+  color: #a77c32;
   font-weight: 800;
-
 }
-
-
 
 .text-btn:hover {
-
   color: var(--navy);
-
   text-decoration: underline;
-
 }
 
-
-
 /* =========================
-
    MAIN APP LAYOUT
-
-\========================= */
-
-
+========================= */
 
 .app-shell {
-
   display: flex;
-
   min-height: 100vh;
-
   width: 100%;
-
   background: var(--background);
-
 }
-
-
 
 .sidebar {
-
   position: sticky;
-
   top: 0;
-
   flex: 0 0 260px;
-
   width: 260px;
-
   min-width: 260px;
-
   height: 100vh;
-
   min-height: 100vh;
-
   padding: 28px 18px 20px;
-
   display: flex;
-
   flex-direction: column;
-
   overflow: hidden;
-
   background:
-
     radial-gradient(circle at top left, rgba(201, 164, 92, 0.09), transparent 32%),
-
     linear-gradient(180deg, #111e37 0%, #0c172c 100%);
-
   color: white;
-
   box-shadow: 5px 0 25px rgba(12, 23, 44, 0.08);
-
 }
-
-
 
 .brand {
-
   padding: 12px 12px 29px;
-
   text-align: center;
-
   border-bottom: 1px solid rgba(255, 255, 255, 0.11);
-
 }
-
-
 
 .brand h2 {
-
   margin: 0;
-
-  color: #CBB27D;
-
+  color: #d7b875;
   font-family: 'Playfair Display', serif;
-
   font-size: 27px;
-
   font-weight: 800;
-
   letter-spacing: 0.7px;
-
 }
-
-
 
 .brand p {
-
   margin: 8px 0 0;
-
   color: #aebbd0;
-
   font-size: 10px;
-
   letter-spacing: 2px;
-
   text-transform: uppercase;
-
 }
-
-
 
 .sidebar nav {
-
   display: flex;
-
   flex: 1 1 auto;
-
   flex-direction: column;
-
   gap: 7px;
-
   min-height: 0;
-
   margin-top: 29px;
-
   padding: 0 2px 8px 0;
-
   overflow-x: hidden;
-
   overflow-y: auto;
-
   scrollbar-width: thin;
-
   scrollbar-color: rgba(215, 184, 117, 0.45) transparent;
-
 }
-
-
 
 .sidebar nav::-webkit-scrollbar {
-
   width: 5px;
-
 }
-
-
 
 .sidebar nav::-webkit-scrollbar-track {
-
   background: transparent;
-
 }
-
-
 
 .sidebar nav::-webkit-scrollbar-thumb {
-
   border-radius: 10px;
-
   background: rgba(215, 184, 117, 0.45);
-
 }
-
-
 
 .sidebar nav button {
-
   position: relative;
-
   flex: 0 0 auto;
-
   display: block;
-
   width: 100%;
-
   min-height: 46px;
-
   padding: 12px 15px;
-
   border: 1px solid transparent;
-
   border-radius: 10px;
-
   background: transparent;
-
   color: #c3cddd;
-
   text-align: left;
-
   font-size: 13px;
-
   font-weight: 600;
-
 }
-
-
 
 .sidebar nav button:hover {
-
   border-color: rgba(255, 255, 255, 0.08);
-
   background: rgba(255, 255, 255, 0.075);
-
   color: #fff;
-
   transform: translateX(2px);
-
 }
-
-
 
 .sidebar nav button.active {
-
   border-color: rgba(215, 184, 117, 0.38);
-
-  background: linear-gradient(110deg, #CBB27D, #BDA477);
-
+  background: linear-gradient(110deg, #d7b875, #c5a15e);
   color: #17213a;
-
   font-weight: 800;
-
   box-shadow: 0 5px 15px rgba(201, 164, 92, 0.17);
-
 }
-
-
 
 .sidebar-bottom {
-
   flex: 0 0 auto;
-
   margin-top: auto;
-
   padding: 20px 8px 0;
-
   border-top: 1px solid rgba(255, 255, 255, 0.11);
-
 }
-
-
 
 .sidebar-bottom p {
-
   overflow-wrap: anywhere;
-
   color: #c5cede;
-
   font-size: 11px;
-
   line-height: 1.6;
-
 }
-
-
 
 .role-label {
-
   display: inline-block;
-
   margin: 4px 0 14px;
-
   padding: 6px 11px;
-
   border: 1px solid rgba(215, 184, 117, 0.2);
-
   border-radius: 20px;
-
   background: rgba(215, 184, 117, 0.12);
-
   color: #e0c78f;
-
   font-size: 10px;
-
   font-weight: 800;
-
   letter-spacing: 0.8px;
-
   text-transform: uppercase;
-
 }
-
-
 
 .sidebar-bottom button {
-
   display: block;
-
   width: 100%;
-
   padding: 11px;
-
   border: 1px solid rgba(255, 255, 255, 0.17);
-
   border-radius: 9px;
-
   background: rgba(255, 255, 255, 0.055);
-
   color: #e6eaf1;
-
   font-size: 12px;
-
   font-weight: 700;
-
 }
-
-
 
 .sidebar-bottom button:hover {
-
   border-color: #c94d55;
-
   background: #a83e49;
-
   color: white;
-
 }
 
-
-
 /* =========================
-
    MAIN CONTENT
-
-\========================= */
-
-
+========================= */
 
 .main-content {
-
   flex: 1;
-
   min-width: 0;
-
   padding: 32px 38px;
-
   overflow-x: hidden;
-
 }
-
-
 
 .topbar {
-
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
-
   margin-bottom: 29px;
-
   padding-bottom: 21px;
-
   border-bottom: 1px solid #e3e6ed;
-
 }
-
-
 
 .topbar h2 {
-
   margin: 0;
-
   color: var(--navy);
-
   font-family: 'Playfair Display', serif;
-
   font-size: 27px;
-
   font-weight: 700;
-
   letter-spacing: 0.1px;
-
 }
-
-
 
 .topbar p {
-
   margin: 7px 0 0;
-
   color: var(--muted);
-
   font-size: 12px;
-
   letter-spacing: 0.2px;
-
 }
-
-
 
 .page-content {
-
   display: flex;
-
   flex-direction: column;
-
   gap: 22px;
-
   width: 100%;
-
 }
 
-
-
 /* =========================
-
    WELCOME PANEL
-
-\========================= */
-
-
+========================= */
 
 .welcome-panel {
-
   position: relative;
-
   isolation: isolate;
-
   overflow: hidden;
-
   padding: 31px 32px;
-
   border: 1px solid rgba(255, 255, 255, 0.09);
-
   border-radius: 17px;
-
   background:
-
     radial-gradient(circle at 90% 10%, rgba(201, 164, 92, 0.19), transparent 35%),
-
-    linear-gradient(115deg, #123638, #245957);
-
+    linear-gradient(115deg, #142440, #263e65);
   color: white;
-
   box-shadow: 0 10px 28px rgba(16, 29, 58, 0.13);
-
 }
-
-
 
 .welcome-panel::after {
-
   content: "";
-
   position: absolute;
-
   z-index: -1;
-
   width: 190px;
-
   height: 190px;
-
   right: -75px;
-
   bottom: -115px;
-
   border: 1px solid rgba(215, 184, 117, 0.23);
-
   border-radius: 50%;
-
   box-shadow: 0 0 0 22px rgba(215, 184, 117, 0.035),
-
     0 0 0 45px rgba(215, 184, 117, 0.025);
-
 }
-
-
 
 .welcome-panel h2 {
-
   margin: 0 0 10px;
-
   color: white;
-
   font-family: 'Playfair Display', serif;
-
   font-size: 25px;
-
   font-weight: 700;
-
 }
-
-
 
 .welcome-panel p {
-
   margin: 0;
-
-  color: #D8E5DF;
-
+  color: #d1dced;
   font-size: 13px;
-
   line-height: 1.7;
-
   overflow-wrap: anywhere;
-
 }
 
-
-
 /* =========================
-
    CARDS AND STATS
-
-\========================= */
-
-
+========================= */
 
 .stats-grid {
-
   display: grid;
-
   grid-template-columns: repeat(4, minmax(0, 1fr));
-
   gap: 17px;
-
   margin: 20px 0;
-
 }
-
-
 
 .stat-card {
-
   position: relative;
-
   min-width: 0;
-
   overflow: hidden;
-
   padding: 23px 20px;
-
   border: 1px solid #e8eaf0;
-
   border-radius: 14px;
-
   background: var(--white);
-
   box-shadow: var(--shadow-sm);
-
   transition: transform 0.22s ease, box-shadow 0.22s ease,
-
     border-color 0.22s ease;
-
 }
-
-
 
 .stat-card::before {
-
   content: "";
-
   position: absolute;
-
   top: 0;
-
   left: 0;
-
   width: 4px;
-
   height: 100%;
-
   background: var(--gold);
-
   opacity: 0.85;
-
 }
-
-
 
 .stat-card:hover {
-
   transform: translateY(-3px);
-
   border-color: #ded3bd;
-
   box-shadow: var(--shadow-md);
-
 }
-
-
 
 .stat-card p {
-
   margin: 0 0 13px;
-
   color: var(--muted);
-
   font-size: 12px;
-
   font-weight: 700;
-
   letter-spacing: 0.25px;
-
 }
-
-
 
 .stat-card h2 {
-
   margin: 0;
-
   color: var(--navy);
-
   font-size: 29px;
-
   font-weight: 800;
-
   letter-spacing: -0.7px;
-
 }
-
-
 
 .panel {
-
   width: 100%;
-
   min-width: 0;
-
   padding: 26px;
-
-  border: 1px solid #E2E8E2;
-
+  border: 1px solid #e7e9ef;
   border-radius: 15px;
-
   background: var(--white);
-
   box-shadow: var(--shadow-sm);
-
 }
-
-
 
 .panel h3 {
-
   margin: 0 0 20px;
-
   color: var(--navy);
-
   font-family: 'Playfair Display', serif;
-
   font-size: 19px;
-
   font-weight: 700;
-
 }
-
-
 
 .panel p {
-
   color: #69758a;
-
   font-size: 13px;
-
   line-height: 1.75;
-
 }
 
-
-
 /* =========================
-
    BUTTONS
-
-\========================= */
-
-
+========================= */
 
 .primary-btn {
-
   min-height: 44px;
-
   padding: 11px 21px;
-
   border: 1px solid var(--navy);
-
   border-radius: 9px;
-
-  background: linear-gradient(120deg, #173E3D, #245957);
-
+  background: linear-gradient(120deg, #172744, #263d62);
   color: white;
-
   font-size: 13px;
-
   font-weight: 800;
-
   letter-spacing: 0.2px;
-
   box-shadow: 0 4px 11px rgba(16, 29, 58, 0.12);
-
 }
-
-
 
 .primary-btn:hover {
-
   border-color: #314b73;
-
-  background: linear-gradient(120deg, #245957, #2D6862);
-
+  background: linear-gradient(120deg, #263d62, #344f78);
   box-shadow: 0 7px 17px rgba(16, 29, 58, 0.17);
-
   transform: translateY(-2px);
-
 }
-
-
 
 .primary-btn:active {
-
   transform: translateY(0);
-
 }
-
-
 
 .quick-links {
-
   display: flex;
-
   flex-wrap: wrap;
-
   gap: 10px;
-
 }
-
-
 
 .quick-links button,
-
 .status-btn {
-
   padding: 10px 15px;
-
   border: 1px solid #e0e4eb;
-
   border-radius: 9px;
-
   background: #f8f9fc;
-
   color: #39465d;
-
   font-size: 12px;
-
   font-weight: 700;
-
 }
-
-
 
 .quick-links button:hover,
-
 .status-btn:hover {
-
   border-color: var(--gold);
-
   background: #fbf5e9;
-
-  color: #80683A;
-
+  color: #785c2b;
   transform: translateY(-1px);
-
 }
-
-
 
 .status-selected {
-
   padding: 10px 15px;
-
   border: 1px solid #d8bd83;
-
   border-radius: 9px;
-
   background: var(--gold-light);
-
-  color: #80683A;
-
+  color: #72521b;
   font-size: 12px;
-
   font-weight: 800;
-
 }
 
-
-
 /* =========================
-
    FORMS
-
-\========================= */
-
-
+========================= */
 
 .panel label {
-
   display: block;
-
   color: #35425a;
-
   font-size: 12px;
-
   font-weight: 700;
-
   letter-spacing: 0.2px;
-
 }
-
-
 
 .panel input,
-
 .panel select {
-
   width: 100%;
-
   min-height: 45px;
-
   padding: 10px 13px !important;
-
   margin: 7px 0 16px !important;
-
   border: 1px solid #e0e4eb !important;
-
   border-radius: 9px !important;
-
   background: #fafbfc;
-
   color: var(--text);
-
   outline: none;
-
   font-size: 13px;
-
   transition: 0.2s ease;
-
 }
-
-
 
 .panel input:hover,
-
 .panel select:hover {
-
   border-color: #c8ced9 !important;
-
 }
-
-
 
 .panel input:focus,
-
 .panel select:focus {
-
   border-color: var(--gold) !important;
-
   background: white;
-
   box-shadow: 0 0 0 4px rgba(201, 164, 92, 0.12);
-
 }
 
-
-
 /* =========================
-
    TABLES
-
-\========================= */
-
-
+========================= */
 
 .table-wrapper {
-
   width: 100%;
-
   overflow-x: auto;
-
-  border: 1px solid #E2E8E2;
-
+  border: 1px solid #e7e9ef;
   border-radius: 11px;
-
   background: white;
-
 }
-
-
 
 table {
-
   width: 100%;
-
   border-collapse: collapse;
-
   background: white;
-
   font-size: 13px;
-
 }
-
-
 
 thead {
-
   background: #f2f4f8;
-
 }
-
-
 
 th {
-
   padding: 15px;
-
   color: #273754;
-
   font-size: 11px;
-
   font-weight: 800;
-
   letter-spacing: 0.45px;
-
   text-align: left;
-
   white-space: nowrap;
-
   text-transform: uppercase;
-
 }
-
-
 
 td {
-
   padding: 14px 15px;
-
   border-top: 1px solid #edf0f4;
-
   color: #4c586d;
-
   white-space: nowrap;
-
 }
-
-
 
 tbody tr {
-
   transition: background 0.15s ease;
-
 }
-
-
 
 tbody tr:hover {
-
   background: #faf9f6;
-
 }
-
-
 
 .status-present {
-
   color: var(--green);
-
   font-weight: 800;
-
 }
-
-
 
 .status-absent {
-
   color: var(--red);
-
   font-weight: 800;
-
 }
 
-
-
 /* =========================
-
    ALERT MESSAGES
-
-\========================= */
-
-
+========================= */
 
 .success-message,
-
 .error-message {
-
   width: 100%;
-
   margin: 0 0 16px;
-
   padding: 13px 16px;
-
   border-radius: 10px;
-
   font-size: 13px;
-
   line-height: 1.6;
-
   overflow-wrap: anywhere;
-
 }
-
-
 
 .success-message {
-
   border: 1px solid #b9e2cf;
-
   background: #edf8f2;
-
   color: #176e4b;
-
 }
-
-
 
 .error-message {
-
   border: 1px solid #edc5c8;
-
   background: #fff1f2;
-
   color: #a93642;
-
 }
 
-
-
 /* =========================
-
    ANIMATIONS
-
-\========================= */
-
-
+========================= */
 
 @keyframes loginAppear {
-
   from {
-
     opacity: 0;
-
     transform: translateY(14px);
-
   }
-
-
 
   to {
-
     opacity: 1;
-
     transform: translateY(0);
-
   }
-
 }
 
-
-
 /* =========================
-
    RESPONSIVE TABLET
-
-\========================= */
-
-
+========================= */
 
 @media (max-width: 1000px) {
-
   .sidebar {
-
     flex-basis: 225px;
-
     width: 225px;
-
     min-width: 225px;
-
   }
-
-
 
   .main-content {
-
     padding: 26px 23px;
-
   }
-
-
 
   .stats-grid {
-
     grid-template-columns: repeat(2, minmax(0, 1fr));
-
   }
-
 }
-
-
 
 /* =========================
-
    RESPONSIVE MOBILE
-
-\========================= */
-
-
+========================= */
 
 @media (max-width: 650px) {
-
   .app-shell {
-
     flex-direction: column;
-
   }
-
-
 
   .sidebar {
-
     position: relative;
-
     top: auto;
-
     flex: 0 0 auto;
-
     width: 100%;
-
     min-width: 0;
-
     height: auto;
-
     min-height: auto;
-
     padding: 16px;
-
     overflow: visible;
-
   }
-
-
 
   .brand {
-
     padding: 5px 10px 15px;
-
   }
-
-
 
   .brand h2 {
-
     font-size: 24px;
-
   }
-
-
 
   .sidebar nav {
-
     display: grid;
-
     flex: 0 0 auto;
-
     grid-template-columns: repeat(2, minmax(0, 1fr));
-
     gap: 7px;
-
     min-height: auto;
-
     margin-top: 16px;
-
     padding: 0;
-
     overflow: visible;
-
   }
-
-
 
   .sidebar nav button {
-
     min-height: 41px;
-
     padding: 9px;
-
     text-align: center;
-
     font-size: 12px;
-
   }
-
-
 
   .sidebar-bottom {
-
     margin-top: 15px;
-
     padding-top: 12px;
-
     text-align: center;
-
   }
-
-
 
   .sidebar-bottom p {
-
     margin: 5px 0;
-
   }
-
-
 
   .sidebar-bottom button {
-
     max-width: 170px;
-
     margin: 0 auto;
-
   }
-
-
 
   .main-content {
-
     width: 100%;
-
     padding: 20px 14px;
-
   }
-
-
 
   .topbar {
-
     margin-bottom: 21px;
-
     padding-bottom: 16px;
-
   }
-
-
 
   .topbar h2 {
-
     font-size: 23px;
-
   }
-
-
 
   .topbar p {
-
     font-size: 11px;
-
     line-height: 1.6;
-
   }
-
-
 
   .welcome-panel {
-
     padding: 24px 19px;
-
   }
-
-
 
   .welcome-panel h2 {
-
     font-size: 21px;
-
   }
-
-
 
   .stats-grid {
-
     grid-template-columns: repeat(2, minmax(0, 1fr));
-
     gap: 11px;
-
   }
-
-
 
   .stat-card {
-
     padding: 18px 14px;
-
   }
-
-
 
   .stat-card h2 {
-
     font-size: 24px;
-
   }
-
-
 
   .stat-card p {
-
     font-size: 11px;
-
   }
-
-
 
   .panel {
-
     padding: 19px 14px;
-
   }
-
-
 
   .panel h3 {
-
     font-size: 18px;
-
   }
-
-
 
   .quick-links {
-
     flex-direction: column;
-
   }
-
-
 
   .quick-links button {
-
     width: 100%;
-
   }
-
-
 
   .login-box {
-
     max-width: 420px;
-
     padding: 38px 24px 32px;
-
   }
-
-
 
   .login-box h1 {
-
     font-size: 32px;
-
   }
-
 }
-
-
 
 @media (max-width: 380px) {
-
   .sidebar nav {
-
     grid-template-columns: 1fr;
-
   }
-
-
 
   .stats-grid {
-
     grid-template-columns: 1fr;
-
   }
-
-
 
   .main-content {
-
     padding-right: 11px;
-
     padding-left: 11px;
-
   }
-
-
 
   .login-box {
-
     padding-right: 19px;
-
     padding-left: 19px;
-
   }
-
 }
-
-
 
 /* Respect reduced-motion preferences */
 
-
-
 @media (prefers-reduced-motion: reduce) {
-
   *,
-
   *::before,
-
   *::after {
-
     scroll-behavior: auto !important;
-
     animation-duration: 0.01ms !important;
-
     animation-iteration-count: 1 !important;
-
     transition-duration: 0.01ms !important;
-
   }
-
 }
 
+/* =========================
+   DDU CAMPUS DASHBOARD REFRESH
+========================= */
 
+.welcome-panel {
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  padding: 38px 40px;
+  border: 0;
+  border-radius: 22px;
+  background: #073b36;
+  box-shadow: 0 18px 42px rgba(8, 55, 50, 0.18);
+}
 
+.welcome-panel::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(4, 39, 36, .95) 0%, rgba(4, 49, 44, .83) 43%, rgba(4, 49, 44, .18) 100%);
+}
+
+.welcome-panel::after { display: none; }
+
+.welcome-banner {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 48%;
+}
+
+.welcome-copy { max-width: 570px; }
+.welcome-kicker, .section-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #e6ca84;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+.welcome-panel h2 { font-size: clamp(25px, 3vw, 36px); letter-spacing: -.5px; }
+.welcome-panel p { margin-top: 10px; color: #e4eee9; }
+.welcome-note { display: block; margin-top: 18px; color: #c2d5ce; font-size: 12px; }
+.welcome-chip {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  padding: 8px 11px;
+  border: 1px solid rgba(235, 213, 155, .42);
+  border-radius: 999px;
+  background: rgba(8, 51, 46, .55);
+  color: #f0d99e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.stats-grid { margin: 0; gap: 14px; }
+.stat-card { border-color: #e6e9df; border-radius: 16px; background: linear-gradient(145deg,#fff 0%,#fbfcf8 100%); }
+.stat-card::before { background: #bd9a50; }
+.panel { border-color: #e7e9df; border-radius: 17px; box-shadow: 0 8px 24px rgba(25, 52, 45, .045); }
+.illustrated-panel-heading { display: flex; min-height: 104px; align-items: center; justify-content: space-between; gap: 12px; }
+.illustrated-panel-heading h3 { margin-bottom: 13px; }
+.illustrated-panel-heading img { flex: 0 0 auto; width: 116px; height: 108px; object-fit: contain; object-position: center bottom; margin: -8px 0 -4px; }
+.student-class-heading img { width: 130px; height: 118px; }
+.timetable-heading img { width: 132px; height: 112px; }
+.section-eyebrow { margin-bottom: 4px; color: #9a7b39; font-size: 9px; letter-spacing: 1.35px; }
+
+.login-box .error-message {
+  -webkit-text-stroke: 0 transparent !important;
+  text-shadow: none !important;
+  color: #a93642 !important;
+  font-weight: 600;
+  paint-order: normal;
+}
+
+@media (max-width: 650px) {
+  .welcome-panel { min-height: 215px; align-items: flex-start; padding: 30px 23px; }
+  .welcome-panel::before { background: linear-gradient(90deg, rgba(4,39,36,.94), rgba(4,49,44,.65)); }
+  .welcome-note { max-width: 245px; line-height: 1.55; }
+  .welcome-chip { right: 14px; bottom: 13px; font-size: 8px; }
+  .illustrated-panel-heading img { width: 90px; height: 90px; }
+  .student-class-heading img, .timetable-heading img { width: 100px; height: 98px; }
+}
 
 
 /* =========================
-
    ATTENDANCE VERIFICATION REQUESTS
-
-\========================= */
-
-
+========================= */
 
 .verification-request-box {
-
   margin-top: 24px;
-
   padding: 20px;
-
   border: 1px solid #e8dfcc;
-
   border-radius: 12px;
-
   background: #fcfaf5;
-
 }
-
-
 
 .verification-request-box h3 {
-
   margin: 0 0 8px;
-
   color: var(--navy);
-
   font-family: 'Playfair Display', serif;
-
   font-size: 18px;
-
 }
-
-
 
 .verification-request-box p,
-
 .verification-hint {
-
   color: #69758a;
-
   font-size: 12px;
-
   line-height: 1.65;
-
 }
-
-
 
 .verification-request-box form {
-
   margin-top: 14px;
-
 }
-
-
 
 .verification-request-box label {
-
   display: block;
-
   margin: 12px 0 6px;
-
   color: #35425a;
-
   font-size: 12px;
-
   font-weight: 700;
-
 }
-
-
 
 .verification-request-box select,
-
 .verification-request-box textarea {
-
   width: 100%;
-
   padding: 11px 13px;
-
   border: 1px solid #e0e4eb;
-
   border-radius: 9px;
-
   background: #fff;
-
   color: var(--text);
-
   font: inherit;
-
   font-size: 13px;
-
 }
-
-
 
 .verification-request-box textarea {
-
   min-height: 86px;
-
   resize: vertical;
-
 }
-
-
 
 .verification-request-box .primary-btn {
-
   margin-top: 12px;
-
 }
-
-
 
 .verification-hint {
-
   margin-bottom: 0;
-
 }
-
-
 
 .verification-reason-cell {
-
   min-width: 220px;
-
   max-width: 320px;
-
   white-space: normal;
-
   overflow-wrap: anywhere;
-
 }
-
-
 
 .verification-pending {
-
   color: #9a6b16;
-
   font-weight: 800;
-
 }
-
-
 
 .custom-session-panel > p {
-
   color: #69758a;
-
   font-size: 13px;
-
   line-height: 1.6;
-
 }
-
-
 
 .custom-session-form {
-
   display: grid;
-
   grid-template-columns: repeat(2, minmax(0, 1fr));
-
   gap: 8px 14px;
-
   align-items: end;
-
 }
-
-
 
 .custom-session-form label {
-
   display: block;
-
   margin-top: 8px;
-
   color: #35425a;
-
   font-size: 12px;
-
   font-weight: 700;
-
 }
-
-
 
 .custom-session-form input {
-
   width: 100%;
-
   min-height: 42px;
-
   padding: 10px 12px;
-
   border: 1px solid #e0e4eb;
-
   border-radius: 9px;
-
   background: #fff;
-
   color: var(--text);
-
   font: inherit;
-
   font-size: 13px;
-
 }
-
-
 
 .custom-session-form button {
-
   grid-column: 1 / -1;
-
   justify-self: start;
-
   margin-top: 10px;
-
 }
-
-
 
 .optional-label {
-
   color: #788397;
-
   font-weight: 500;
-
 }
-
-
 
 .custom-session-badge {
-
   display: inline-block;
-
   margin: 3px 0;
-
   padding: 3px 8px;
-
   border: 1px solid #d7e4ff;
-
   border-radius: 999px;
-
   background: #eef4ff;
-
   color: #315b9d;
-
   font-size: 11px;
-
   font-weight: 700;
-
   white-space: nowrap;
-
 }
 
-
-
 @media (max-width: 650px) {
-
   .verification-request-box {
-
     padding: 15px;
-
   }
-
-
 
   .verification-request-box .primary-btn {
-
     width: 100%;
-
   }
-
-
 
   .verification-reason-cell {
-
     min-width: 180px;
-
   }
-
-
 
   .custom-session-form {
-
     grid-template-columns: 1fr;
-
   }
-
-
 
   .custom-session-form button {
-
     width: 100%;
-
   }
-
-}
-
-/* =========================================================
-   DDU AIDS — DEEP TEAL + SOFT GOLD PREMIUM DESIGN SYSTEM
-   Visual-only layer: existing React behaviour is unchanged.
-========================================================= */
-
-:root {
-  font-family: "Manrope", sans-serif;
-  color: #263B38;
-  background: #F3F4EE;
-  --navy: #102A2B;
-  --navy-light: #194343;
-  --navy-soft: #245957;
-  --gold: #BDA477;
-  --gold-light: #F2EBDD;
-  --background: #F3F4EE;
-  --white: #FFFFFF;
-  --text: #263B38;
-  --muted: #778681;
-  --border: #E2E8E2;
-  --green: #28765D;
-  --red: #B94D50;
-  --shadow-sm: 0 5px 18px rgba(16, 42, 43, 0.055);
-  --shadow-md: 0 14px 34px rgba(16, 42, 43, 0.09);
-  --shadow-lg: 0 28px 75px rgba(7, 28, 29, 0.28);
-}
-
-body {
-  font-family: "Manrope", sans-serif;
-  background:
-    radial-gradient(ellipse at 8% 0%, rgba(189, 164, 119, 0.075), transparent 32%),
-    #F3F4EE;
-  color: #263B38;
-}
-
-button, input, select, textarea {
-  font-family: "Manrope", sans-serif;
-}
-
-button {
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.login-page {
-  background:
-    radial-gradient(ellipse at 12% 12%, rgba(189, 164, 119, 0.19), transparent 34%),
-    radial-gradient(ellipse at 88% 86%, rgba(75, 128, 119, 0.23), transparent 38%),
-    linear-gradient(135deg, #0B2224 0%, #123638 48%, #0C292A 100%);
-}
-
-.login-page::before,
-.login-page::after {
-  border-color: rgba(205, 181, 132, 0.22);
-}
-
-.login-box {
-  max-width: 460px;
-  padding: 48px 42px 40px;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 25px;
-  background: linear-gradient(155deg, rgba(255,255,255,0.99), rgba(247,247,239,0.98));
-  box-shadow: 0 30px 85px rgba(3, 20, 21, 0.34);
-}
-
-.login-box::before {
-  width: 82px;
-  height: 4px;
-  background: linear-gradient(90deg, #9E8659, #D5C39C, #9E8659);
-}
-
-.login-box h1,
-.brand h2,
-.topbar h2,
-.welcome-panel h2,
-.panel h3 {
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-}
-
-.login-box h1 {
-  color: #153B3A;
-  font-size: clamp(34px, 5vw, 40px);
-  letter-spacing: 0.005em;
-}
-
-.login-box > p {
-  color: #71817B;
-  font-weight: 600;
-  letter-spacing: 0.035em;
-}
-
-.login-box label,
-.panel label {
-  color: #294642;
-  font-weight: 800;
-  letter-spacing: 0.055em;
-  text-transform: uppercase;
-  font-size: 11px;
-}
-
-.login-box input,
-.panel input,
-.panel select {
-  border-color: #DCE5DE !important;
-  border-radius: 11px !important;
-  background: #FBFCF8;
-  color: #263B38;
-  font-weight: 600;
-}
-
-.login-box input:focus,
-.panel input:focus,
-.panel select:focus {
-  border-color: #BDA477 !important;
-  box-shadow: 0 0 0 4px rgba(189, 164, 119, 0.17);
-}
-
-.text-btn {
-  color: #8C7549;
-  font-weight: 800;
-}
-
-.text-btn:hover {
-  color: #194343;
-}
-
-.app-shell {
-  background: #F3F4EE;
-}
-
-.sidebar {
-  background:
-    radial-gradient(circle at 0% 0%, rgba(189, 164, 119, 0.17), transparent 34%),
-    linear-gradient(180deg, #153B3A 0%, #0D292A 58%, #0A2223 100%);
-  box-shadow: 8px 0 32px rgba(13, 41, 42, 0.11);
-}
-
-.brand {
-  border-bottom-color: rgba(229, 220, 195, 0.16);
-}
-
-.brand h2 {
-  color: #D3BE91;
-  font-size: 28px;
-  letter-spacing: 0.015em;
-}
-
-.brand p {
-  color: #B7C9C0;
-  font-weight: 700;
-  letter-spacing: 0.19em;
-}
-
-.sidebar nav button {
-  border-radius: 11px;
-  color: #D0DDD6;
-  font-weight: 700;
-}
-
-.sidebar nav button:hover {
-  border-color: rgba(205, 181, 132, 0.2);
-  background: rgba(255, 255, 255, 0.075);
-  color: #FFFFFF;
-}
-
-.sidebar nav button.active {
-  border-color: rgba(230, 211, 169, 0.6);
-  background: linear-gradient(110deg, #D2BE91, #BDA477);
-  color: #173635;
-  box-shadow: 0 7px 20px rgba(5, 22, 22, 0.2);
-}
-
-.role-label {
-  border-color: rgba(205, 181, 132, 0.32);
-  background: rgba(189, 164, 119, 0.14);
-  color: #E3D2AA;
-}
-
-.sidebar-bottom {
-  border-top-color: rgba(229, 220, 195, 0.16);
-}
-
-.sidebar-bottom button {
-  border-color: rgba(224, 234, 226, 0.2);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.sidebar-bottom button:hover {
-  border-color: #B94D50;
-  background: #9F4147;
-}
-
-.main-content {
-  background: transparent;
-}
-
-.topbar {
-  border-bottom-color: #DDE5DE;
-}
-
-.topbar h2 {
-  color: #153B3A;
-  font-size: 29px;
-}
-
-.topbar p {
-  color: #778681;
-  font-weight: 600;
-}
-
-.welcome-panel {
-  border: 1px solid rgba(214, 225, 216, 0.16);
-  background:
-    radial-gradient(circle at 88% 12%, rgba(189, 164, 119, 0.22), transparent 34%),
-    linear-gradient(115deg, #123536 0%, #1C504D 58%, #245957 100%);
-  box-shadow: 0 15px 34px rgba(16, 57, 56, 0.16);
-}
-
-.welcome-panel h2 {
-  font-size: 27px;
-  letter-spacing: -0.02em;
-}
-
-.welcome-panel p {
-  color: #D6E4DC;
-  font-weight: 600;
-}
-
-.stat-card,
-.panel {
-  border-color: #E1E8E0;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #FFFFFF, #FBFCF8);
-  box-shadow: 0 6px 20px rgba(19, 54, 51, 0.055);
-}
-
-.stat-card {
-  padding: 24px 21px;
-}
-
-.stat-card::before {
-  width: 4px;
-  background: linear-gradient(180deg, #D0BC8E, #A98F5E);
-}
-
-.stat-card:hover,
-.panel:hover {
-  border-color: #D4C5A4;
-  box-shadow: 0 14px 32px rgba(19, 54, 51, 0.09);
-}
-
-.stat-card p {
-  color: #71817B;
-  font-weight: 800;
-  letter-spacing: 0.045em;
-}
-
-.stat-card h2 {
-  color: #153B3A;
-  font-family: "Manrope", sans-serif;
-  font-size: 31px;
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-
-.panel h3 {
-  color: #173F3D;
-  font-size: 20px;
-}
-
-.panel p {
-  color: #687A73;
-}
-
-.primary-btn {
-  border: 1px solid #173F3D;
-  border-radius: 10px;
-  background: linear-gradient(125deg, #153B3A, #23605A);
-  color: #FFFFFF;
-  box-shadow: 0 6px 16px rgba(17, 59, 57, 0.17);
-  font-weight: 800;
-}
-
-.primary-btn:hover {
-  border-color: #2D7068;
-  background: linear-gradient(125deg, #20534F, #2D7068);
-  box-shadow: 0 9px 21px rgba(17, 59, 57, 0.22);
-}
-
-.quick-links button,
-.status-btn {
-  border-color: #DCE5DE;
-  border-radius: 10px;
-  background: #F7F8F2;
-  color: #34514B;
-  font-weight: 800;
-}
-
-.quick-links button:hover,
-.status-btn:hover {
-  border-color: #BDA477;
-  background: #F5F0E4;
-  color: #745E35;
-}
-
-.status-selected {
-  border-color: #CDB98B;
-  background: #F2EBDD;
-  color: #735D35;
-}
-
-.table-wrapper {
-  border-color: #E1E8E0;
-  border-radius: 13px;
-  box-shadow: var(--shadow-sm);
-}
-
-table {
-  color: #314A44;
-}
-
-thead {
-  background: #EFF3EC;
-}
-
-th {
-  color: #31534B;
-  font-weight: 800;
-  letter-spacing: 0.075em;
-}
-
-td {
-  border-top-color: #EAF0E9;
-  color: #52655E;
-}
-
-tbody tr:hover {
-  background: #F7F8F2;
-}
-
-.success-message {
-  border-color: #C4E0D0;
-  background: #EFF8F1;
-  color: #24694F;
-}
-
-.error-message {
-  border-color: #E8C9C8;
-  background: #FFF3F1;
-  color: #9E4145;
-}
-
-:focus-visible {
-  outline-color: rgba(189, 164, 119, 0.62);
-}
-
-::selection {
-  background: #DCCBA7;
-  color: #102A2B;
-}
-
-::-webkit-scrollbar-track {
-  background: #E9EEE7;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #B9C7BC;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #829A8D;
-}
-
-/* Shared polish for the newer custom-session and request panels. */
-.custom-session-form,
-.verification-request-box {
-  border-color: #DDE6DD;
-  border-radius: 15px;
-}
-
-.custom-session-form input,
-.custom-session-form select,
-.verification-request-box input,
-.verification-request-box select,
-.verification-request-box textarea {
-  border-color: #DCE5DE;
-  border-radius: 10px;
-}
-
-@media (max-width: 650px) {
-  .login-box {
-    padding: 40px 24px 34px;
-    border-radius: 21px;
-  }
-
-  .topbar h2 {
-    font-size: 25px;
-  }
-
-  .welcome-panel {
-    border-radius: 15px;
-  }
-}
-
-
-/* ===============================
-   DDU PREMIUM SPLIT LOGIN
-   Official university seal + campus visual
-================================ */
-.login-split-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
-  align-items: stretch;
-  justify-content: stretch;
-  gap: 0;
-  min-height: 100vh;
-  padding: 0;
-  background: #082426;
-}
-.login-visual {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 100vh;
-  padding: clamp(28px, 4.2vw, 68px);
-  overflow: hidden;
-  background-image: linear-gradient(180deg, rgba(5,25,27,.52), rgba(5,25,27,.04) 48%, rgba(5,25,27,.88)), url("./ddu-campus.jpg");
-  background-size: cover;
-  background-position: center;
-}
-.login-visual::after {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  border-right: 1px solid rgba(205,181,132,.45);
-  box-shadow: inset -35px 0 70px rgba(4,25,26,.24);
-}
-.login-visual-brand { display: flex; align-items: center; gap: 22px; color: #fff; }
-.login-visual-logo {
-  flex: 0 0 112px; width: 112px; height: 112px; border-radius: 50%;
-  background: #fff url("./ddu-logo.jpg") center / contain no-repeat;
-  border: 2px solid #cdb584; box-shadow: 0 8px 28px rgba(0,0,0,.28);
-}
-.login-visual-brand h2 { margin: 0; color: #e6cf9e; font: 800 clamp(32px, 4vw, 58px)/1.05 "Playfair Display", Georgia, serif; letter-spacing: .01em; }
-.login-visual-brand p { margin: 2px 0 8px; color: #fff; font: 700 clamp(26px, 3vw, 42px)/1.05 "Playfair Display", Georgia, serif; }
-.login-visual-brand span { color: #f1eee5; font-size: clamp(11px, 1.15vw, 16px); font-style: italic; letter-spacing: .025em; }
-.login-visual-footer { display: flex; flex-wrap: wrap; gap: 18px 30px; color: #f3dfb5; font-size: 13px; font-weight: 800; letter-spacing: .035em; text-shadow: 0 2px 8px rgba(0,0,0,.65); }
-.login-content { display: flex; align-items: center; justify-content: center; min-width: 0; padding: clamp(22px, 4vw, 58px); background: radial-gradient(ellipse at 100% 0%, rgba(189,164,119,.16), transparent 35%), linear-gradient(145deg,#0b292a,#071e20); }
-.login-content .login-box { width: 100%; max-width: 520px; padding: 42px clamp(24px, 3vw, 48px) 38px; border: 1px solid rgba(205,181,132,.78); border-radius: 24px; background: linear-gradient(155deg, rgba(12,43,43,.97), rgba(5,29,30,.98)); box-shadow: 0 28px 80px rgba(0,0,0,.4), inset 0 1px rgba(255,255,255,.08); color: #f6f1e7; }
-.login-content .login-box h1 { color: #f6f1e7; font-size: clamp(32px, 3vw, 43px); }
-.login-content .login-box > p { color: #d4d8cf; }
-.login-content .login-box label { color: #e5d6b7; }
-.login-content .login-box input, .login-content .login-box select { color: #f6f1e7; background: rgba(255,255,255,.08); border-color: rgba(205,181,132,.42) !important; }
-.login-content .login-box input::placeholder { color: #b8c3bc; }
-.login-content .login-box input:focus { background: rgba(255,255,255,.12); }
-.login-content .login-box .primary-btn { background: linear-gradient(110deg,#e7cd97,#bda477); color: #102b2b; border: 0; font-weight: 900; }
-.login-card-logo { width: 76px; height: 76px; margin: 0 auto 18px; border-radius: 50%; background: #fff url("./ddu-logo.jpg") center / contain no-repeat; border: 2px solid #cdb584; box-shadow: 0 5px 20px rgba(0,0,0,.22); }
-.login-content .login-box::before { display: none; }
-.login-content .text-btn { color: #e3c88f; }
-.login-content .text-btn:hover { color: #fff; }
-@media (max-width: 900px) {
-  .login-split-page { grid-template-columns: 1fr; }
-  .login-visual { min-height: 34vh; padding: 24px; background-position: center 55%; }
-  .login-visual-logo { width: 74px; height: 74px; flex-basis: 74px; }
-  .login-visual-brand h2 { font-size: 32px; }
-  .login-visual-brand p { font-size: 25px; }
-  .login-visual-footer { display: none; }
-  .login-content { padding: 26px 18px 34px; }
-}
-@media (max-width: 480px) {
-  .login-visual { min-height: 27vh; padding: 20px 16px; }
-  .login-visual-brand { gap: 14px; }
-  .login-visual-logo { width: 62px; height: 62px; flex-basis: 62px; }
-  .login-visual-brand h2 { font-size: 27px; }
-  .login-visual-brand p { font-size: 21px; }
-  .login-visual-brand span { font-size: 10px; }
-  .login-content .login-box { padding: 30px 22px; }
 }
