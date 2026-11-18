@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "./supabase.js";
 import "./style.css";
@@ -549,9 +548,6 @@ function App() {
       }
     }
 
-    // Verify once when the authenticated user/profile changes.
-    // Do not poll every 12 seconds: that repeatedly resets the UI to
-    // "checking" and causes the device-verification flicker.
     verifyDevice();
     return () => {
       cancelled = true;
@@ -1109,8 +1105,6 @@ function App() {
     }
   }
 
-  // Custom sessions are created closed and must be opened by an Admin
-  // during their scheduled window. The RPCs enforce the role in the database.
   async function createCustomSession(event) {
     event.preventDefault();
     if (!isAdmin) return;
@@ -1658,64 +1652,64 @@ function App() {
               </p>
             </form>
           ) : (
-          <form onSubmit={handleAuth}>
-            {isSignup && (
-              <>
-                <label>Account Type</label>
+            <form onSubmit={handleAuth}>
+              {isSignup && (
+                <>
+                  <label>Account Type</label>
 
-                <select
-                  value={signupType}
-                  onChange={(e) => setSignupType(e.target.value)}
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                </select>
+                  <select
+                    value={signupType}
+                    onChange={(e) => setSignupType(e.target.value)}
+                  >
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                  </select>
 
-                <label>Full Name</label>
-                <input
-                  value={signupName}
-                  onChange={(e) => setSignupName(e.target.value)}
-                  placeholder="Enter full name"
-                  required
-                />
+                  <label>Full Name</label>
+                  <input
+                    value={signupName}
+                    onChange={(e) => setSignupName(e.target.value)}
+                    placeholder="Enter full name"
+                    required
+                  />
 
-                <label>Mobile Number</label>
-                <input
-                  type="tel"
-                  value={signupPhone}
-                  onChange={(e) => setSignupPhone(e.target.value)}
-                  placeholder="Enter registered mobile number"
-                  required
-                />
-              </>
-            )}
+                  <label>Mobile Number</label>
+                  <input
+                    type="tel"
+                    value={signupPhone}
+                    onChange={(e) => setSignupPhone(e.target.value)}
+                    placeholder="Enter registered mobile number"
+                    required
+                  />
+                </>
+              )}
 
-            <label>Email Address</label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="Enter email"
-              required
-            />
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="Enter email"
+                required
+              />
 
-            <label>Password</label>
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="Enter password"
-              required
-            />
+              <label>Password</label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+              />
 
-            <button className="primary-btn" disabled={busy}>
-              {busy
-                ? "Please wait..."
-                : isSignup
-                ? "Create Account"
-                : "Login"}
-            </button>
-          </form>
+              <button className="primary-btn" disabled={busy}>
+                {busy
+                  ? "Please wait..."
+                  : isSignup
+                  ? "Create Account"
+                  : "Login"}
+              </button>
+            </form>
           )}
 
           {!forgotMode && !isSignup && (
@@ -1734,21 +1728,23 @@ function App() {
             </p>
           )}
 
-          {!forgotMode && <p>
-            {isSignup
-              ? "Already have an account?"
-              : "New student or teacher?"}{" "}
-            <button
-              className="text-btn"
-              onClick={() => {
-                setIsSignup(!isSignup);
-                setError("");
-                setMessage("");
-              }}
-            >
-              {isSignup ? "Login" : "Create Account"}
-            </button>
-          </p>}
+          {!forgotMode && (
+            <p>
+              {isSignup
+                ? "Already have an account?"
+                : "New student or teacher?"}{" "}
+              <button
+                className="text-btn"
+                onClick={() => {
+                  setIsSignup(!isSignup);
+                  setError("");
+                  setMessage("");
+                }}
+              >
+                {isSignup ? "Login" : "Create Account"}
+              </button>
+            </p>
+          )}
 
           {message && (
             <p className="success-message">{message}</p>
