@@ -179,6 +179,14 @@ function App() {
   const isTeacher = role === "teacher";
   const canViewData = isStaff || isTeacher;
 
+  // Block other accounts using the exact display name "Aditya".
+  // This is a UI restriction only; the Supabase admin allowlist/RLS
+  // remains the actual security boundary.
+  const isUnauthorizedAditya =
+    session?.user?.user_metadata?.full_name?.trim().toLowerCase() ===
+      "aditya" &&
+    role !== "admin";
+
   const present = attendanceRecords.filter(
     (item) => item.status === "present"
   ).length;
@@ -1780,6 +1788,22 @@ function App() {
     );
   }
 
+  // UNAUTHORIZED DISPLAY-NAME GATE
+  if (session && profile && isUnauthorizedAditya) {
+    return (
+      <div className="login-page">
+        <div className="login-box">
+          <h1>DDU AIDS</h1>
+          <h2>Access Restricted</h2>
+          <p>beta abhi chote hai bade ho jaye fir papa se panga lena</p>
+          <button className="primary-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // DEVICE APPROVAL GATE — STUDENTS AND TEACHERS
   if (
     profile &&
@@ -1849,7 +1873,7 @@ function App() {
         </nav>
 
         <div className="sidebar-bottom">
-          <p>{session.user.email}</p>
+          <p>Attendance Portal</p>
           <span className="role-label">
             {role.toUpperCase()}
           </span>
@@ -1885,7 +1909,7 @@ function App() {
               <div className="welcome-copy">
                 <span className="welcome-kicker">DEEN DAYAL UPADHYAYA UNIVERSITY · AIDS</span>
                 <h2>Welcome back to your campus</h2>
-                <p>{session.user.email} <span aria-hidden="true">·</span> {role.toUpperCase()}</p>
+                <p>{role.toUpperCase()}</p>
                 <span className="welcome-note">Your classes, attendance and progress in one place.</span>
               </div>
               <span className="welcome-chip">ATTENDANCE PORTAL</span>
@@ -3226,10 +3250,6 @@ function App() {
           <section className="page-content">
             <div className="panel">
               <h3>Account Settings</h3>
-
-              <p>
-                <strong>Email:</strong> {session.user.email}
-              </p>
 
               <p>
                 <strong>Role:</strong> {role.toUpperCase()}

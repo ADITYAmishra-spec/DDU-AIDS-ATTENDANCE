@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XML Tree Example</title>
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f2f2f2;
+        }
+
+        tree, root, branch, leaf {
+            display: block;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        root {
+            background-color: lightblue;
+            border: 2px solid blue;
+        }
+
+        branch {
+            background-color: lightyellow;
+            border: 1px solid orange;
+            margin-left: 30px;
+        }
+
+        leaf {
+            background-color: lightgreen;
+            margin-left: 30px;
+            border: 1px solid green;
+        }
+
+        name {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>XML Tree Structure</h2>
+
+<tree>
+    <root>
+        <name>Computer Science</name>
+
+        <branch>
+            <name>Programming</name>
+            <leaf>Python</leaf>
+            <leaf>Java</leaf>
+            <leaf>C++</leaf>
+        </branch>
+
+        <branch>
+            <name>Web Development</name>
+            <leaf>HTML</leaf>
+            <leaf>CSS</leaf>
+            <leaf>JavaScript</leaf>
+        </branch>
+
+        <branch>
+            <name>Database</name>
+            <leaf>MySQL</leaf>
+            <leaf>MongoDB</leaf>
+        </branch>
+    </root>
+</tree>
+
+</body>
+</html>
