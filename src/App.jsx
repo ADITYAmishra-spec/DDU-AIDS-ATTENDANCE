@@ -904,21 +904,39 @@ function App() {
   }
 
   // LOAD ALL RECORDS - STAFF ONLY
+  // Fetch attendance in pages so Supabase's row limit cannot truncate analytics.
   async function loadAllRecords() {
     if (!isStaff) return;
 
-    const { data, error } = await supabase
-      .from("attendance")
-      .select(
-        "id, student_id, status, marked_at, attendance_sessions(subject, session_date, is_open)"
-      );
+    const PAGE_SIZE = 1000;
+    let allRows = [];
+    let from = 0;
 
-    if (error) {
-      setError("Analytics data: " + error.message);
-      return;
+    try {
+      while (true) {
+        const { data, error } = await supabase
+          .from("attendance")
+          .select(
+            "id, student_id, status, marked_at, attendance_sessions(subject, session_date, is_open)"
+          )
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) {
+          setError("Analytics data: " + error.message);
+          return;
+        }
+
+        const rows = data || [];
+        allRows = allRows.concat(rows);
+
+        if (rows.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+
+      setAllRecords(allRows);
+    } catch (err) {
+      setError("Analytics data: " + (err?.message || "Unable to load analytics data."));
     }
-
-    setAllRecords(data || []);
   }
 
   // LOAD PERSONAL ATTENDANCE
