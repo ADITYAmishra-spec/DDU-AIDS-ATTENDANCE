@@ -1228,12 +1228,15 @@ function App() {
     setMessage("");
 
     try {
-      const { data, error } = await supabase.rpc(
-        "close_attendance_session",
-        {
-          p_session_id: selectedSession,
-        }
-      );
+      // Use a dedicated RPC for custom sessions. The database now blocks
+      // custom sessions from being closed through the normal-session RPC.
+      const closeRpc = selected.is_custom === true
+        ? "admin_close_custom_session"
+        : "close_attendance_session";
+
+      const { data, error } = await supabase.rpc(closeRpc, {
+        p_session_id: selectedSession,
+      });
 
       if (error) throw error;
 
